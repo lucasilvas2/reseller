@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -21,5 +23,22 @@ Route::middleware([
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
+});
 
+Route::prefix('admin')->group(function () {
+    Route::get('/login', [AdminController::class, 'showLoginForm'])->name('admin.login');
+    Route::post('/login', [AdminController::class, 'login']);
+
+    Route::middleware([
+//        'auth:sanctum',
+//        config('jetstream.auth_session'),
+//        'verified',
+    ])->group(function () {
+        Route::get('/dashboard', function () {
+            return Inertia::render('Admin/Dashboard');
+        })->name('admin.dashboard');
+
+        Route::get('/users', [UserController::class, 'index'])->name('admin.users');
+        Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');
+    });
 });
