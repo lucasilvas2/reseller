@@ -1,11 +1,3 @@
-<script setup>
-import AdminLayout from "@/Layouts/AdminLayout.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
-import Table from "@/Components/Table.vue";
-import NavLink from "@/Components/NavLink.vue";
-import ResponsiveNavLink from "@/Components/ResponsiveNavLink.vue";
-</script>
-
 <template>
     <AdminLayout title="Users">
         <template #header>
@@ -39,53 +31,44 @@ import ResponsiveNavLink from "@/Components/ResponsiveNavLink.vue";
 </template>
 
 <script>
+import AdminLayout from "@/Layouts/AdminLayout.vue";
+import PrimaryButton from "@/Components/PrimaryButton.vue";
 import Table from "@/Components/Table.vue";
+
 export default {
     components: {
+        AdminLayout,
+        PrimaryButton,
         Table,
+    },
+    props: {
+        users: {
+            type: Array,
+            required: true,
+        },
     },
     data() {
         return {
-            headers: ['Product name', 'Color', 'Category', 'Price', 'Action'],
-            rows: [
-                {
-                    productName: 'Apple MacBook Pro 17"',
-                    color: 'Silver',
-                    category: 'Laptop',
-                    price: '$2999',
-                },
-                {
-                    productName: 'Microsoft Surface Pro',
-                    color: 'White',
-                    category: 'Laptop PC',
-                    price: '$1999',
-                },
-                {
-                    productName: 'Magic Mouse 2',
-                    color: 'Black',
-                    category: 'Accessories',
-                    price: '$99',
-                },
-                {
-                    productName: 'Google Pixel Phone',
-                    color: 'Gray',
-                    category: 'Phone',
-                    price: '$799',
-                },
-                {
-                    productName: 'Apple Watch 5',
-                    color: 'Red',
-                    category: 'Wearables',
-                    price: '$999',
-                },
-            ],
+            headers: ['Id', 'Name', 'Email', 'Role', 'Action'],
+            rows: [],
         };
     },
     methods: {
         handleEdit(row) {
             console.log('Edit row:', row);
-            // Aqui você pode adicionar a lógica para editar o item
         },
+        transformUsersToRows(users) {
+            return users.map(user => ({
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.roles[0].name ?? 'No role',
+            }));
+        },
+    },
+    mounted() {
+        this.rows = this.transformUsersToRows(this.users);
     },
 };
 </script>
+

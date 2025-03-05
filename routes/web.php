@@ -29,16 +29,13 @@ Route::prefix('admin')->group(function () {
     Route::get('/login', [AdminController::class, 'showLoginForm'])->name('admin.login');
     Route::post('/login', [AdminController::class, 'login']);
 
-    Route::middleware([
-//        'auth:sanctum',
-//        config('jetstream.auth_session'),
-//        'verified',
-    ])->group(function () {
+    Route::middleware([])->group(function () {
         Route::get('/dashboard', function () {
             return Inertia::render('Admin/Dashboard');
         })->name('admin.dashboard');
 
-        Route::get('/users', [UserController::class, 'index'])->name('admin.users');
+        Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
         Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');
+        Route::post('/users/store', [UserController::class, 'store'])->name('admin.users.store');
     });
 });

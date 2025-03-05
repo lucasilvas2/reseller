@@ -16,11 +16,13 @@ const classes = computed(() => {
 </script>
 
 <template>
-    <button v-if="type === 'button'" :class="classes">
+    <!-- Button for regular submit actions -->
+    <button v-if="!href" :type="type" :class="classes">
         <slot />
     </button>
 
-    <Link v-else :href="href" classes>
+    <!-- Link only renders when href is provided -->
+    <Link v-else :href="href" :class="classes">
         <slot />
     </Link>
 </template>
