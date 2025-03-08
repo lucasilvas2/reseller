@@ -22,6 +22,7 @@
                     <Table
                         :headers="headers"
                         :rows="rows"
+                        :hasActions="hasActions"
                         @edit="handleEdit"
                     />
                 </div>
@@ -34,6 +35,7 @@
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import Table from "@/Components/Table.vue";
+import {router} from "@inertiajs/vue3";
 
 export default {
     components: {
@@ -49,13 +51,16 @@ export default {
     },
     data() {
         return {
-            headers: ['Id', 'Name', 'Email', 'Role', 'Action'],
+            headers: ['Id', 'Name', 'Email', 'Role'],
             rows: [],
+            hasActions: true
         };
     },
     methods: {
         handleEdit(row) {
-            console.log('Edit row:', row);
+            router.get(route('admin.users.edit', {
+                id: row.id
+            }));
         },
         transformUsersToRows(users) {
             return users.map(user => ({
