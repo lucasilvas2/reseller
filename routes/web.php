@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DealershipsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -40,5 +41,11 @@ Route::prefix('admin')->group(function () {
         Route::post('/users/store', [UserController::class, 'store'])->name('admin.users.store');
         Route::get('/users/edit/{id}', [UserController::class, 'edit'])->name('admin.users.edit');
         Route::post('/users/update/{id}', [UserController::class, 'update'])->name('admin.users.update');
+
+        Route::get('/dealerships', [DealershipsController::class, 'index'])->name('admin.dealerships.index');
+        Route::get('/dealerships/create', [DealershipsController::class, 'create'])->name('admin.dealerships.create');
+        Route::post('/dealerships/store', [DealershipsController::class, 'store'])->name('admin.dealerships.store');
+        Route::get('/dealerships/edit/{id}', [DealershipsController::class, 'edit'])->name('admin.dealerships.edit');
+        Route::post('/dealerships/update/{id}', [DealershipsController::class, 'update'])->name('admin.dealerships.update');
     });
 });
