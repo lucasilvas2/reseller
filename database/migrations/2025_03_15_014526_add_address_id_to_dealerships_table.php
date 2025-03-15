@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('dealerships_users', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('dealership_id')->constrained('dealerships');
-            $table->foreignId('user_id')->constrained('users');
-            $table->timestamps();
+        Schema::table('dealerships', function (Blueprint $table) {
+            $table->foreignId('address_id')->nullable()->constrained('addresses');
         });
     }
 
@@ -24,6 +21,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('dealerships_users');
+        Schema::table('dealerships', function (Blueprint $table) {
+            $table->dropForeign(['address_id']);
+            $table->dropColumn('address_id');
+        });
     }
 };

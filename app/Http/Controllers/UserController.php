@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Dealership;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -12,15 +13,17 @@ class UserController extends Controller
 {
     protected User $userModel;
     protected Role $roleModel;
+    protected  Dealership $dealershipModel;
 
     /**
      * @param User $user
      * @param Role $role
      */
-    public function __construct(User $user, Role $role)
+    public function __construct(User $user, Role $role, Dealership $dealership)
     {
         $this->userModel = $user;
         $this->roleModel = $role;
+        $this->dealershipModel = $dealership;
     }
 
     public function index(): \Inertia\Response
@@ -37,8 +40,10 @@ class UserController extends Controller
     public function create(): \Inertia\Response
     {
         $roles = $this->roleModel->all();
+        $dealerships = $this->dealershipModel->all();
         return Inertia::render('Admin/Users/Create',[
             'roles' => $roles,
+            'dealerships' => $dealerships,
         ]);
     }
 
@@ -48,12 +53,14 @@ class UserController extends Controller
             'name' => 'required',
             'email' => 'required',
             'role' => 'required',
+            'dealership' => 'required',
         ]);
 
         $user = $this->userModel->create([
             'name' => $request->get('name'),
             'email' => $request->get('email'),
-            'password' => Hash::make('12345678')
+            'password' => Hash::make('12345678'),
+            'dealership_id' => $request->get('dealership'),
         ]);
 
         $role = $this->roleModel->findById($request->get('role'));
@@ -67,9 +74,11 @@ class UserController extends Controller
         $user->role = $user->roles->first();
 
         $roles = $this->roleModel->all();
+        $dealerships = $this->dealershipModel->all();
         return Inertia::render('Admin/Users/Edit',[
             'roles' => $roles,
             'user' => $user,
+            'dealerships' => $dealerships,
         ]);
     }
 
@@ -79,12 +88,14 @@ class UserController extends Controller
             'name' => 'required',
             'email' => 'required',
             'role' => 'required',
+            'dealership' => 'required',
         ]);
 
         $user = $this->userModel->find($id);
         $user->update([
             'name' => $request->get('name'),
             'email' => $request->get('email'),
+            'dealership_id' => $request->get('dealership'),
         ]);
         $role = $this->roleModel->findById($request->get('role'));
         $user->assignRole($role);

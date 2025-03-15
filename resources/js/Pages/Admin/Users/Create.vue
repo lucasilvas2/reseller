@@ -89,6 +89,16 @@ const submitForm = () => {
                                 />
                                 <InputError class="mt-2" :message="form.errors.role"/>
                             </div>
+                            <div>
+                                <InputLabel for="delaership" value="Dealership"/>
+                                <SelectInput
+                                    class="w-full"
+                                    v-model="form.dealership"
+                                    :options="optionsDealership"
+                                    autofocus
+                                />
+                                <InputError class="mt-2" :message="form.errors.dealership"/>
+                            </div>
                         </div>
                         <div class="flex items-center justify-end mt-4">
                             <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }"
@@ -113,6 +123,10 @@ export default {
             type: Array,
             required: true,
         },
+        dealerships:{
+            type: Array,
+            required: true
+        },
     },
     data() {
         return {
@@ -120,11 +134,11 @@ export default {
         };
     },
     methods: {
-        transformRolesToOptions(roles) {
-            console.log(roles);
-            return roles.map(role => ({
-                value: role.id,
-                label: role.name,
+        transformValuesToOptions(value) {
+            return value.map(value => ({
+                value: value.id,
+                label: `${value.id} - ${value.name.charAt(0).toUpperCase()
+                + value.name.slice(1)}` ,
             }));
         },
         submit(){
@@ -132,7 +146,8 @@ export default {
         }
     },
     mounted() {
-        this.options = this.transformRolesToOptions(this.roles);
+        this.options = this.transformValuesToOptions(this.roles);
+        this.optionsDealership = this.transformValuesToOptions(this.dealerships);
     },
 };
 </script>

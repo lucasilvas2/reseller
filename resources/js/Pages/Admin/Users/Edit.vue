@@ -60,6 +60,16 @@
                                 />
                                 <InputError class="mt-2" :message="form.errors.role"/>
                             </div>
+                            <div>
+                                <InputLabel for="dealership" value="Dealership"/>
+                                <SelectInput
+                                    class="w-full"
+                                    v-model="form.dealership"
+                                    :options="optionsDealership"
+                                    autofocus
+                                />
+                                <InputError class="mt-2" :message="form.errors.dealership"/>
+                            </div>
                         </div>
                         <div class="flex items-center justify-end mt-4">
                             <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }"
@@ -101,6 +111,10 @@ export default {
             type: Object,
             required: true,
         },
+        dealerships:{
+            type: Array,
+            required: true
+        },
     },
     data() {
         return {
@@ -109,16 +123,18 @@ export default {
                 email: this.user.email,
                 phone_number: this.user.phone_number,
                 role: this.user.role.id,
+                dealership: this.user.dealership_id,
                 errors: {},
             }),
-            options: this.transformRolesToOptions(this.roles),
+            options: this.transformValuesToOptions(this.roles),
+            optionsDealership: this.transformValuesToOptions(this.dealerships),
         };
     },
     methods: {
-        transformRolesToOptions(roles) {
-            return roles.map(role => ({
-                value: role.id,
-                label: role.name,
+        transformValuesToOptions(value) {
+            return value.map(value => ({
+                value: value.id,
+                label: `${value.id} - ${value.name}` ,
             }));
         },
         submitForm() {
