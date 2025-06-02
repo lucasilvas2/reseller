@@ -37,6 +37,7 @@ class PermissionSeeder extends Seeder
         ]);
 
         User::where('name', 'admin')->first()->assignRole('admin');
+        User::where('name', 'dealer')->first()->assignRole('dealer');
 
         $users = User::whereNot('name', 'admin')->get();
         foreach ($users as $user) {

@@ -12,6 +12,7 @@ const form = useForm({
     email: '',
     phone_number: '',
     role: '',
+    dealership: '',
     errors: {},
 });
 
