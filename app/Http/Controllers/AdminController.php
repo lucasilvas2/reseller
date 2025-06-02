@@ -43,4 +43,14 @@ class AdminController extends Controller
             'email' => 'As credenciais fornecidas não correspondem aos nossos registros.',
         ]);
     }
+
+    // Processar o logout do administrador
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('admin.login');
+    }
 }

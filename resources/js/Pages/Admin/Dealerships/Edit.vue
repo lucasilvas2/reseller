@@ -1,44 +1,14 @@
-<script setup>
-import AdminLayout from "@/Layouts/AdminLayout.vue";
-import TextInput from "@/Components/TextInput.vue";
-import InputError from "@/Components/InputError.vue";
-import InputLabel from "@/Components/InputLabel.vue";
-import {useForm} from "@inertiajs/vue3";
-import SelectInput from "@/Components/SelectInput.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
-
-const form = useForm({
-    name: '',
-    email: '',
-    phone_number: '',
-    role: '',
-    dealership: '',
-    errors: {},
-});
-
-const submitForm = () => {
-    form.post('/admin/users/store', {
-        onSuccess: () => {
-        },
-        onError: (errors) => {
-            form.errors = errors;
-        },
-    });
-};
-</script>
-
 <template>
-    <AdminLayout title="Users">
+    <AdminLayout title="Dealership">
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Create
+                Edit Dealership
             </h2>
         </template>
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
-
                     <form @submit.prevent="submitForm">
                         <div class="md:grid md:grid-cols-2 md:gap-6">
                             <div>
@@ -80,31 +50,11 @@ const submitForm = () => {
                                 />
                                 <InputError class="mt-2" :message="form.errors.phone_number"/>
                             </div>
-                            <div>
-                                <InputLabel for="role" value="Role"/>
-                                <SelectInput
-                                    class="w-full"
-                                    v-model="form.role"
-                                    :options="options"
-                                    autofocus
-                                />
-                                <InputError class="mt-2" :message="form.errors.role"/>
-                            </div>
-                            <div>
-                                <InputLabel for="delaership" value="Dealership"/>
-                                <SelectInput
-                                    class="w-full"
-                                    v-model="form.dealership"
-                                    :options="optionsDealership"
-                                    autofocus
-                                />
-                                <InputError class="mt-2" :message="form.errors.dealership"/>
-                            </div>
                         </div>
                         <div class="flex items-center justify-end mt-4">
                             <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }"
                                            :disabled="form.processing">
-                                Saved
+                                Save
                             </PrimaryButton>
                         </div>
                     </form>
@@ -115,40 +65,50 @@ const submitForm = () => {
 </template>
 
 <script>
-
+import AdminLayout from "@/Layouts/AdminLayout.vue";
+import TextInput from "@/Components/TextInput.vue";
+import InputError from "@/Components/InputError.vue";
+import InputLabel from "@/Components/InputLabel.vue";
+import { useForm } from "@inertiajs/vue3";
+import SelectInput from "@/Components/SelectInput.vue";
+import PrimaryButton from "@/Components/PrimaryButton.vue";
 
 export default {
-    components: {},
+    components: {
+        AdminLayout,
+        TextInput,
+        InputError,
+        InputLabel,
+        SelectInput,
+        PrimaryButton,
+    },
     props: {
-        roles: {
-            type: Array,
+        dealership: {
+            type: Object,
             required: true,
-        },
-        dealerships:{
-            type: Array,
-            required: true
         },
     },
     data() {
         return {
-            options: [],
+            form: useForm({
+                name: this.dealership.name,
+                email: this.dealership.email,
+                phone_number: this.dealership.phone_number,
+                errors: {},
+            }),
         };
     },
     methods: {
-        transformValuesToOptions(value) {
-            return value.map(value => ({
-                value: value.id,
-                label: `${value.id} - ${value.name.charAt(0).toUpperCase()
-                + value.name.slice(1)}` ,
-            }));
+        submitForm() {
+            this.form.post(`/admin/dealerships/update/${this.dealership.id}`, {
+                onSuccess: () => {
+                    // Lógica para sucesso
+                },
+                onError: (errors) => {
+                    this.form.errors = errors;
+                },
+            });
         },
-        submit(){
-            form.post('/admin/login');
-        }
-    },
-    mounted() {
-        this.options = this.transformValuesToOptions(this.roles);
-        this.optionsDealership = this.transformValuesToOptions(this.dealerships);
     },
 };
 </script>

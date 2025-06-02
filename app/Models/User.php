@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -30,6 +31,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'dealership_id'
     ];
 
     /**
@@ -65,4 +67,14 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get the dealership that the user belongs to.
+     * @return BelongsTo
+     */
+    public function dealerships(): BelongsTo
+    {
+        return $this->belongsTo(Dealership::class);
+    }
+
 }

@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Dealership;
 use App\Models\User;
+
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -15,11 +17,23 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::factory(10)->create();
+        Dealership::factory(10)->create();
 
         User::factory()->create([
             'name' => 'admin',
             'email' => 'admin@example.com',
             'password' => Hash::make('admin'),
+        ]);
+
+        User::factory()->create([
+            'name' => 'dealer',
+            'email' => 'dealer@example.com',
+            'password' => Hash::make('dealer'),
+        ]);
+
+        $dealer = User::where('name', 'dealer')->first();
+        $dealer->update([
+            'dealership_id' => Dealership::first()->id,
         ]);
 
         $this->call([

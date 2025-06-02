@@ -11,13 +11,11 @@ const form = useForm({
     name: '',
     email: '',
     phone_number: '',
-    role: '',
-    dealership: '',
     errors: {},
 });
 
 const submitForm = () => {
-    form.post('/admin/users/store', {
+    form.post('/admin/dealerships/store', {
         onSuccess: () => {
         },
         onError: (errors) => {
@@ -80,26 +78,6 @@ const submitForm = () => {
                                 />
                                 <InputError class="mt-2" :message="form.errors.phone_number"/>
                             </div>
-                            <div>
-                                <InputLabel for="role" value="Role"/>
-                                <SelectInput
-                                    class="w-full"
-                                    v-model="form.role"
-                                    :options="options"
-                                    autofocus
-                                />
-                                <InputError class="mt-2" :message="form.errors.role"/>
-                            </div>
-                            <div>
-                                <InputLabel for="delaership" value="Dealership"/>
-                                <SelectInput
-                                    class="w-full"
-                                    v-model="form.dealership"
-                                    :options="optionsDealership"
-                                    autofocus
-                                />
-                                <InputError class="mt-2" :message="form.errors.dealership"/>
-                            </div>
                         </div>
                         <div class="flex items-center justify-end mt-4">
                             <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }"
@@ -120,14 +98,6 @@ const submitForm = () => {
 export default {
     components: {},
     props: {
-        roles: {
-            type: Array,
-            required: true,
-        },
-        dealerships:{
-            type: Array,
-            required: true
-        },
     },
     data() {
         return {
@@ -135,20 +105,11 @@ export default {
         };
     },
     methods: {
-        transformValuesToOptions(value) {
-            return value.map(value => ({
-                value: value.id,
-                label: `${value.id} - ${value.name.charAt(0).toUpperCase()
-                + value.name.slice(1)}` ,
-            }));
-        },
         submit(){
             form.post('/admin/login');
         }
     },
     mounted() {
-        this.options = this.transformValuesToOptions(this.roles);
-        this.optionsDealership = this.transformValuesToOptions(this.dealerships);
     },
 };
 </script>

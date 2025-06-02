@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\BrandsController;
+use App\Http\Controllers\DealershipsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +31,7 @@ Route::middleware([
 Route::prefix('admin')->group(function () {
     Route::get('/login', [AdminController::class, 'showLoginForm'])->name('admin.login');
     Route::post('/login', [AdminController::class, 'login']);
+    Route::post('/logout', [AdminController::class, 'logout'])->name('admin.logout');
 
     Route::middleware([])->group(function () {
         Route::get('/dashboard', function () {
@@ -40,5 +43,18 @@ Route::prefix('admin')->group(function () {
         Route::post('/users/store', [UserController::class, 'store'])->name('admin.users.store');
         Route::get('/users/edit/{id}', [UserController::class, 'edit'])->name('admin.users.edit');
         Route::post('/users/update/{id}', [UserController::class, 'update'])->name('admin.users.update');
+
+        Route::get('/dealerships', [DealershipsController::class, 'index'])->name('admin.dealerships.index');
+        Route::get('/dealerships/create', [DealershipsController::class, 'create'])->name('admin.dealerships.create');
+        Route::post('/dealerships/store', [DealershipsController::class, 'store'])->name('admin.dealerships.store');
+        Route::get('/dealerships/edit/{id}', [DealershipsController::class, 'edit'])->name('admin.dealerships.edit');
+        Route::post('/dealerships/update/{id}', [DealershipsController::class, 'update'])->name('admin.dealerships.update');
+
+        Route::get('/brands', [BrandsController::class, 'index'])->name('admin.brands.index');
+        Route::get('/brands/create', [BrandsController::class, 'create'])->name('admin.brands.create');
+        Route::post('/brands/store', [BrandsController::class, 'store'])->name('admin.brands.store');
+        Route::get('/brands/edit/{id}', [BrandsController::class, 'edit'])->name('admin.brands.edit');
+        Route::put('/brands/update/{id}', [BrandsController::class, 'update'])->name('admin.brands.update');
+        Route::delete('/brands/destroy/{id}', [BrandsController::class, 'destroy'])->name('admin.brands.destroy');
     });
 });
