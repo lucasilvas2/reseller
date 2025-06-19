@@ -11,5 +11,26 @@ services:
             - "3326:3306"
         volumes:
             - mysql-data:/var/lib/mysql:rw
+    localstack:
+        image: localstack/localstack
+        environment:
+            - SERVICES=s3,lambda,dynamodb,sqs,cloudformation
+            - DEFAULT_REGION=us-east-1
+            - DATA_DIR=/tmp/localstack/data
+        ports:
+            - "4566:4566"
+            - "4510-4559:4510-4559"
+        volumes:
+            - ./localstack:/tmp/localstack:rw
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+        environment:
+            - discovery.type=single-node
+            - xpack.security.enabled=false
+        ports:
+            - "9200:9200"
+            - "9300:9300"
+        volumes:
+            - esdata:/usr/share/elasticsearch/data
 volumes:
     mysql-data:
