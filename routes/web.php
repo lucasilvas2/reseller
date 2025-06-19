@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BrandsController;
 use App\Http\Controllers\DealershipsController;
+use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,13 @@ Route::middleware([
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
+
+    Route::get('/products', [ProductsController::class, 'index'])->name('products.index');
+    Route::get('/products/create', [ProductsController::class, 'create'])->name('products.create');
+    Route::post('/products/store', [ProductsController::class, 'store'])->name('products.store');
+    Route::get('/products/edit/{id}', [ProductsController::class, 'edit'])->name('products.edit');
+    Route::post('/products/update/{id}', [ProductsController::class, 'update'])->name('products.update');
+    Route::delete('/products/destroy/{id}', [ProductsController::class, 'destroy'])->name('products.destroy');
 });
 
 Route::prefix('admin')->group(function () {

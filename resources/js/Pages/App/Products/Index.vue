@@ -1,14 +1,14 @@
 <template>
-    <AdminLayout title="Brands">
+    <AppLayout title="Brands">
         <template #header>
             <div class="flex flex-row">
                 <div class="basis-1/2">
                     <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                        Brands
+                        Products
                     </h2>
                 </div>
                 <div class="basis-1/2 flex justify-end">
-                    <PrimaryButton type="link" :href="route('admin.brands.create')">
+                    <PrimaryButton type="link" :href="route('products.create')">
                         Add
                     </PrimaryButton>
                 </div>
@@ -28,7 +28,7 @@
                 </div>
             </div>
         </div>
-    </AdminLayout>
+    </AppLayout>
 </template>
 
 <script>
@@ -36,41 +36,44 @@ import AdminLayout from "@/Layouts/AdminLayout.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import Table from "@/Components/Table.vue";
 import {router} from "@inertiajs/vue3";
+import AppLayout from "@/Layouts/AppLayout.vue";
 
 export default {
     components: {
-        AdminLayout,
+        AppLayout,
         PrimaryButton,
         Table,
     },
     props: {
-        brands: {
+        products: {
             type: Array,
             required: true,
         },
     },
     data() {
         return {
-            headers: ['Id', 'Name', 'Created'],
+            headers: ['Id', 'Name', 'Description', 'Created'],
             rows: [],
             hasActions: true
         };
     },
     methods: {
-        handleEdit(row) {
-            router.get(route('admin.brands.edit', {
-                id: row.id
+        handleEdit(product) {
+            router.get(route('products.edit', {
+                id: product.id
             }));
         },
-        transformBrandsToRows(brands) {
-            return brands.map(user => ({
-                id: user.id,
-                name: user.name,
+        transformBrandsToRows(products) {
+            return products.map(product => ({
+                id: product.id,
+                name: product.name,
+                description: product.description,
+                created_at: product.created_at,
             }));
         },
     },
     mounted() {
-        this.rows = this.transformBrandsToRows(this.brands);
+        this.rows = this.transformBrandsToRows(this.products);
     },
 };
 </script>
