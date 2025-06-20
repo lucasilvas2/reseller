@@ -81,17 +81,17 @@ const logout = () => {
                                     </template>
                                     <template #content>
                                         <div class="w-48">
-                                            <DropdownLink :href="route('stock.index')">
+                                            <DropdownLink :href="route('stocks.index')">
                                                 Dashboard
                                             </DropdownLink>
 
-                                            <Dropdown :href="route('stock.products')">
+                                            <DropdownLink :href="route('stocks.products')">
                                                 Products
-                                            </Dropdown>
+                                            </DropdownLink>
 
-                                            <Dropdown :href="route('stock.movements')">
+                                            <DropdownLink :href="route('stocks.movements')">
                                                 Movements
-                                            </Dropdown>
+                                            </DropdownLink>
                                         </div>
                                     </template>
                                 </Dropdown>

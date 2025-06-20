@@ -39,7 +39,7 @@ class ProductsController extends Controller
         $product = $this->productsModel->create($request->all());
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('images', 'public');
+            $path = $request->file('image')->store('images', 's3');
             $product->update(['image_url' => $path]);
         }
 
@@ -66,7 +66,7 @@ class ProductsController extends Controller
         $product->update($request->all());
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('images', 'public');
+            $path = $request->file('image')->store('images', 's3');
             $product->update(['image_url' => $path]);
         }
 

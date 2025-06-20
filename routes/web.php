@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BrandsController;
 use App\Http\Controllers\DealershipsController;
 use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +35,11 @@ Route::middleware([
     Route::get('/products/edit/{id}', [ProductsController::class, 'edit'])->name('products.edit');
     Route::post('/products/update/{id}', [ProductsController::class, 'update'])->name('products.update');
     Route::delete('/products/destroy/{id}', [ProductsController::class, 'destroy'])->name('products.destroy');
+
+    //stocks
+    Route::get('/stocks', [StockController::class, 'index'])->name('stocks.index');
+    Route::get('/stocks/products', [StockController::class, 'products'])->name('stocks.products');
+    Route::get('/stocks/movements', [StockController::class, 'movements'])->name('stocks.movements');
 });
 
 Route::prefix('admin')->group(function () {

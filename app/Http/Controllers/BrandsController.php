@@ -36,7 +36,7 @@ class BrandsController extends Controller
         $brand = $this->brandsModel->create($request->all());
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('image', 'public');
+            $path = $request->file('image')->store('image', 's3');
             $brand->update(['image_url' => $path]);
         }
 
