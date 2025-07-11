@@ -18,6 +18,7 @@ return new class extends Migration
             $table->decimal('cost_price', 10, 2);
             $table->decimal('sale_price', 10, 2);
             $table->foreignId('product_id')->constrained('products');
+            $table->foreignId('dealership_id')->nullable()->constrained('dealerships');
             $table->timestamps();
             $table->softDeletes();
         });

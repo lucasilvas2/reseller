@@ -11,14 +11,13 @@ import ImageInput from "@/Components/ImageInput.vue";
 
 const form = useForm({
     name: '',
-    image: '',
-    description: '',
-    brand_id: null,
+    email: '',
+    phone_number: '',
     errors: {},
 });
 
 const submitForm = () => {
-    form.post('/products/store', {
+    form.post('/clients/store', {
         onSuccess: () => {
         },
         onError: (errors) => {
@@ -29,7 +28,7 @@ const submitForm = () => {
 </script>
 
 <template>
-    <AppLayout title="Products">
+    <AppLayout title="Clients">
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Create
@@ -56,39 +55,30 @@ const submitForm = () => {
                                 <InputError class="mt-2" :message="form.errors.name"/>
                             </div>
                             <div>
-                                <InputLabel for="image" value="Image"/>
-                                <ImageInput
-                                    id="image"
-                                    v-model="form.image"
-                                    type="text"
+                                <InputLabel for="email" value="Email"/>
+                                <TextInput
+                                    id="email"
+                                    v-model="form.email"
+                                    type="email"
                                     class="mt-1 block w-full"
+                                    required
                                     autofocus
-                                    autocomplete="image"
+                                    autocomplete="email"
                                 />
-                                <InputError class="mt-2" :message="form.errors.image"/>
+                                <InputError class="mt-2" :message="form.errors.email"/>
                             </div>
                             <div>
-                                <InputLabel for="name" value="Description"/>
+                                <InputLabel for="phone_number" value="Phone Number"/>
                                 <TextInput
-                                    id="description"
-                                    v-model="form.description"
+                                    id="phone_number"
+                                    v-model="form.phone_number"
                                     type="text"
                                     class="mt-1 block w-full"
                                     required
                                     autofocus
-                                    autocomplete="description"
+                                    autocomplete="phone_number"
                                 />
-                                <InputError class="mt-2" :message="form.errors.description"/>
-                            </div>
-                            <div>
-                                <InputLabel for="brands" value="Brands"/>
-                                <SelectInput
-                                    class="w-full"
-                                    v-model="form.brand_id"
-                                    :options="options"
-                                    autofocus
-                                />
-                                <InputError class="mt-2" :message="form.errors.brand_id"/>
+                                <InputError class="mt-2" :message="form.errors.phone_number"/>
                             </div>
                         </div>
                         <div class="flex items-center justify-end mt-4">

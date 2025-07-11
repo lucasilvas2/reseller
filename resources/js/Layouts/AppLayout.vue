@@ -54,6 +54,12 @@ const logout = () => {
                             </div>
 
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                <NavLink :href="route('clients.index')" :active="route().current('clients.index')">
+                                    Clients
+                                </NavLink>
+                            </div>
+
+                            <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink :href="route('products.index')" :active="route().current('products.index')">
                                     Products
                                 </NavLink>
@@ -81,15 +87,11 @@ const logout = () => {
                                     </template>
                                     <template #content>
                                         <div class="w-48">
-                                            <DropdownLink :href="route('stocks.index')">
-                                                Dashboard
-                                            </DropdownLink>
+<!--                                            <DropdownLink :href="route('stocks.dashboard')">-->
+<!--                                                Dashboard-->
+<!--                                            </DropdownLink>-->
 
-                                            <DropdownLink :href="route('stocks.products')">
-                                                Products
-                                            </DropdownLink>
-
-                                            <DropdownLink :href="route('stocks.movements')">
+                                            <DropdownLink :href="route('stocks.movements.index')">
                                                 Movements
                                             </DropdownLink>
                                         </div>

@@ -7,18 +7,19 @@ import {useForm} from "@inertiajs/vue3";
 import SelectInput from "@/Components/SelectInput.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
-import ImageInput from "@/Components/ImageInput.vue";
 
 const form = useForm({
-    name: '',
-    image: '',
-    description: '',
-    brand_id: null,
+    barcode: '',
+    sku: '',
+    quantity: '',
+    cost_price: null,
+    sale_price: null,
+    product_id: null,
     errors: {},
 });
 
 const submitForm = () => {
-    form.post('/products/store', {
+    form.post('/stocks/movements/store', {
         onSuccess: () => {
         },
         onError: (errors) => {
@@ -29,7 +30,7 @@ const submitForm = () => {
 </script>
 
 <template>
-    <AppLayout title="Products">
+    <AppLayout title="Products SKU">
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Create
@@ -43,52 +44,79 @@ const submitForm = () => {
                     <form @submit.prevent="submitForm">
                         <div class="md:grid md:grid-cols-2 md:gap-6">
                             <div>
-                                <InputLabel for="name" value="Name"/>
+                                <InputLabel for="barcode" value="Código de barra"/>
                                 <TextInput
-                                    id="name"
-                                    v-model="form.name"
+                                    id="sale_price"
+                                    v-model="form.barcode"
                                     type="text"
                                     class="mt-1 block w-full"
                                     required
                                     autofocus
-                                    autocomplete="username"
+                                    autocomplete="barcode"
                                 />
-                                <InputError class="mt-2" :message="form.errors.name"/>
+                                <InputError class="mt-2" :message="form.errors.barcode"/>
                             </div>
                             <div>
-                                <InputLabel for="image" value="Image"/>
-                                <ImageInput
-                                    id="image"
-                                    v-model="form.image"
-                                    type="text"
-                                    class="mt-1 block w-full"
-                                    autofocus
-                                    autocomplete="image"
-                                />
-                                <InputError class="mt-2" :message="form.errors.image"/>
-                            </div>
-                            <div>
-                                <InputLabel for="name" value="Description"/>
+                                <InputLabel for="sku" value="SKU"/>
                                 <TextInput
-                                    id="description"
-                                    v-model="form.description"
+                                    id="sku"
+                                    v-model="form.sku"
                                     type="text"
                                     class="mt-1 block w-full"
                                     required
                                     autofocus
-                                    autocomplete="description"
+                                    autocomplete="sku"
                                 />
-                                <InputError class="mt-2" :message="form.errors.description"/>
+                                <InputError class="mt-2" :message="form.errors.sku"/>
                             </div>
                             <div>
-                                <InputLabel for="brands" value="Brands"/>
+                                <InputLabel for="cost_price" value="Preço Compra"/>
+                                <TextInput
+                                    id="cost_price"
+                                    v-model="form.cost_price"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    required
+                                    autofocus
+                                    autocomplete="cost_price"
+                                />
+                                <InputError class="mt-2" :message="form.errors.cost_price"/>
+                            </div>
+                            <div>
+                                <InputLabel for="sale_price" value="Preço Venda"/>
+                                <TextInput
+                                    id="sale_price"
+                                    v-model="form.sale_price"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    required
+                                    autofocus
+                                    autocomplete="sale_price"
+                                />
+                                <InputError class="mt-2" :message="form.errors.sale_price"/>
+                            </div>
+                            <div>
+                                <InputLabel for="quantity" value="Quantidade"/>
+                                <TextInput
+                                    id="quantity"
+                                    v-model="form.quantity"
+                                    type="number"
+                                    class="mt-1 block w-full"
+                                    required
+                                    autofocus
+                                    autocomplete="quantity"
+                                />
+                                <InputError class="mt-2" :message="form.errors.quantity"/>
+                            </div>
+                            <div>
+                                <InputLabel for="products" value="Products"/>
                                 <SelectInput
                                     class="w-full"
-                                    v-model="form.brand_id"
+                                    v-model="form.product_id"
                                     :options="options"
                                     autofocus
                                 />
-                                <InputError class="mt-2" :message="form.errors.brand_id"/>
+                                <InputError class="mt-2" :message="form.errors.product_id"/>
                             </div>
                         </div>
                         <div class="flex items-center justify-end mt-4">
@@ -110,7 +138,7 @@ const submitForm = () => {
 export default {
     components: {},
     props: {
-        brands: {
+        products: {
             type: Array,
             required: true,
         },
@@ -130,7 +158,7 @@ export default {
         },
     },
     mounted() {
-        this.options = this.transformValuesToOptions(this.brands);
+        this.options = this.transformValuesToOptions(this.products);
     },
 };
 </script>

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('image_url')->nullable();
             $table->foreignId('brand_id')->nullable()->constrained('brands');
+            $table->foreignId('dealership_id')->nullable()->constrained('dealerships');
             $table->timestamps();
             $table->softDeletes();
         });

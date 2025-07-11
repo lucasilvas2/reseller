@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BrandsController;
+use App\Http\Controllers\ClientsController;
 use App\Http\Controllers\DealershipsController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\StockController;
@@ -37,9 +38,16 @@ Route::middleware([
     Route::delete('/products/destroy/{id}', [ProductsController::class, 'destroy'])->name('products.destroy');
 
     //stocks
-    Route::get('/stocks', [StockController::class, 'index'])->name('stocks.index');
-    Route::get('/stocks/products', [StockController::class, 'products'])->name('stocks.products');
-    Route::get('/stocks/movements', [StockController::class, 'movements'])->name('stocks.movements');
+    Route::get('/stocks/movements', [StockController::class, 'index'])->name('stocks.movements.index');
+    Route::get('/stocks/movements/create', [StockController::class, 'create'])->name('stocks.movements.create');
+    Route::post('/stocks/movements/store', [StockController::class, 'store'])->name('stocks.movements.store');
+    Route::get('/stocks/movements/edit/{id}', [StockController::class, 'edit'])->name('stocks.movements.edit');
+
+    //clients
+    Route::get('/clients', [ClientsController::class, 'index'])->name('clients.index');
+    Route::get('/clients/create', [ClientsController::class, 'create'])->name('clients.create');
+    Route::post('/clients/store', [ClientsController::class, 'store'])->name('clients.store');
+    Route::delete('/clients/delete/{id}', [ClientsController::class, 'delete'])->name('clients.delete');
 });
 
 Route::prefix('admin')->group(function () {

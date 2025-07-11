@@ -36,6 +36,10 @@ class ProductsController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
+        $request->merge([
+            'dealership_id' => auth()->user()->dealership_id,
+        ]);
+
         $product = $this->productsModel->create($request->all());
 
         if ($request->hasFile('image')) {

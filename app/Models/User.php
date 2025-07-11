@@ -74,7 +74,7 @@ class User extends Authenticatable
      */
     public function dealerships(): BelongsTo
     {
-        return $this->belongsTo(Dealership::class);
+        return $this->belongsTo(Dealership::class, 'dealership_id');
     }
 
 }
