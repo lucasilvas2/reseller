@@ -96,14 +96,9 @@ const submitForm = () => {
 
 <script>
 
-
 export default {
     components: {},
     props: {
-        brands: {
-            type: Array,
-            required: true,
-        },
     },
     data() {
         return {
@@ -111,16 +106,8 @@ export default {
         };
     },
     methods: {
-        transformValuesToOptions(value) {
-            return value.map(value => ({
-                value: value.id,
-                label: `${value.id} - ${value.name.charAt(0).toUpperCase()
-                + value.name.slice(1)}` ,
-            }));
-        },
     },
     mounted() {
-        this.options = this.transformValuesToOptions(this.brands);
     },
 };
 </script>

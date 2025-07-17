@@ -50,22 +50,30 @@ class UserController extends Controller
     public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $request->validate([
-            'name' => 'required',
-            'email' => 'required',
-            'role' => 'required',
-            'dealership' => 'required',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'role' => 'required|exists:roles,id',
+            'dealership' => 'required|exists:dealerships,id',
+            'password' => 'sometimes|min:5|confirmed',
         ]);
+
+        // Gerar senha aleatória se não fornecida
+        $password = $request->get('password', \Illuminate\Support\Str::random(16));
 
         $user = $this->userModel->create([
             'name' => $request->get('name'),
             'email' => $request->get('email'),
-            'password' => Hash::make('12345678'),
+            'password' => Hash::make($password),
             'dealership_id' => $request->get('dealership'),
         ]);
 
         $role = $this->roleModel->findById($request->get('role'));
         $user->assignRole($role);
-        return redirect()->route('admin.users.index');
+
+        // TODO: Enviar email com a senha para o usuário
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'Usuário criado com sucesso!');
     }
 
     public function edit(int $id): \Inertia\Response
@@ -85,22 +93,25 @@ class UserController extends Controller
     public function update(Request $request, int $id): \Illuminate\Http\RedirectResponse
     {
         $request->validate([
-            'name' => 'required',
-            'email' => 'required',
-            'role' => 'required',
-            'dealership' => 'required',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $id,
+            'role' => 'required|exists:roles,id',
+            'dealership' => 'required|exists:dealerships,id',
         ]);
 
-        $user = $this->userModel->find($id);
+        $user = $this->userModel->findOrFail($id);
+
         $user->update([
             'name' => $request->get('name'),
             'email' => $request->get('email'),
             'dealership_id' => $request->get('dealership'),
         ]);
-        $role = $this->roleModel->findById($request->get('role'));
-        $user->assignRole($role);
 
-        info('Package installed successfully.');
-        return redirect()->route('admin.users.index');
+        // Sincronizar roles (remove os antigos e adiciona o novo)
+        $role = $this->roleModel->findById($request->get('role'));
+        $user->syncRoles([$role]);
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'Usuário atualizado com sucesso!');
     }
 }

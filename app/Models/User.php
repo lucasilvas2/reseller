@@ -68,6 +68,8 @@ class User extends Authenticatable
         ];
     }
 
+    protected $with = ['roles'];
+
     /**
      * Get the dealership that the user belongs to.
      * @return BelongsTo

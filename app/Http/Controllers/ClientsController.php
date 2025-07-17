@@ -101,18 +101,25 @@ class ClientsController extends Controller
         ));
     }
 
-    public function delete(int $id): \Illuminate\Http\RedirectResponse
+    public function destroy(int $id)
     {
-        $client = $this->clientModel->findOrFail($id);
-        $user = $client->user;
+        $client = $this->clientModel
+            ->where('dealership_id', auth()->user()->dealership_id)
+            ->find($id);
 
-        if ($user) {
-            $user->delete();
+        if (!$client) {
+            return redirect()->route('clients.index')->with('error', 'Client not found.');
         }
 
         $client->delete();
 
-        return redirect()->route('clients.index');
+        return \Inertia\Inertia::location(route('clients.index'));
+    }
+
+    public function show(int $id): \Inertia\Response
+    {
+        $client = $this->clientModel->with('user')->findOrFail($id);
+        return inertia('App/Clients/View', compact('client'));
     }
 
 }

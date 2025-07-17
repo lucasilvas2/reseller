@@ -127,6 +127,14 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'admin' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/admin.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 90, // Manter logs de admin por 90 dias
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];

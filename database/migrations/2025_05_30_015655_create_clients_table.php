@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('dealership_id')->constrained('dealerships');
             $table->foreignId('user_id')->constrained('users');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

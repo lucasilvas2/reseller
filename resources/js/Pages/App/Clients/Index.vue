@@ -13,7 +13,6 @@
                     </PrimaryButton>
                 </div>
             </div>
-
         </template>
 
         <div class="py-12">
@@ -22,8 +21,8 @@
                     <Table
                         :headers="headers"
                         :rows="rows"
-                        :hasActions="hasActions"
-                        @edit="handleEdit"
+                        :actions="tableActions"
+                        @action="handleAction"
                     />
                 </div>
             </div>
@@ -54,16 +53,48 @@ export default {
         return {
             headers: ['Id', 'Name', 'Phone', 'Created'],
             rows: [],
-            hasActions: true
+            tableActions: [
+                {
+                    name: 'view',
+                    label: 'Visualizar',
+                    icon: 'fas fa-eye',
+                    type: 'default'
+                },
+                {
+                    name: 'delete',
+                    label: 'Deletar',
+                    icon: 'fas fa-trash',
+                    type: 'danger'
+                }
+            ]
         };
     },
     methods: {
-        handleDelete(client) {
-            router.get(route('clients.delete', {
+        handleAction(payload) {
+            const { action, row } = payload;
+
+            switch (action) {
+                case 'view':
+                    this.handleView(row);
+                    break;
+                case 'delete':
+                    this.handleDelete(row);
+                    break;
+            }
+        },
+        handleView(client) {
+            router.get(route('clients.show', {
                 id: client.id
             }));
         },
-        transformBrandsToRows(clients) {
+        handleDelete(client) {
+            if (confirm('Tem certeza que deseja deletar este cliente?')) {
+                router.delete(route('clients.destroy', {
+                    id: client.id
+                }));
+            }
+        },
+        transformClientsToRows(clients) {
             return clients.map(client => ({
                 id: client.id,
                 name: client.user.name,
@@ -73,8 +104,7 @@ export default {
         },
     },
     mounted() {
-        this.rows = this.transformBrandsToRows(this.clients);
+        this.rows = this.transformClientsToRows(this.clients);
     },
 };
 </script>
-
