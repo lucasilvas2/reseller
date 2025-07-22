@@ -39,10 +39,17 @@ Route::middleware([
         Route::delete('/products/destroy/{id}', [ProductsController::class, 'destroy'])->name('products.destroy');
 
         //stocks
+        Route::get('/stocks/dashboard', [StockController::class, 'dashboard'])->name('stocks.dashboard');
         Route::get('/stocks/movements', [StockController::class, 'index'])->name('stocks.movements.index');
         Route::get('/stocks/movements/create', [StockController::class, 'create'])->name('stocks.movements.create');
         Route::post('/stocks/movements/store', [StockController::class, 'store'])->name('stocks.movements.store');
         Route::get('/stocks/movements/edit/{id}', [StockController::class, 'edit'])->name('stocks.movements.edit');
+        Route::put('/stocks/movements/update/{id}', [StockController::class, 'update'])->name('stocks.movements.update');
+        Route::delete('/stocks/movements/destroy/{id}', [StockController::class, 'destroy'])->name('stocks.movements.destroy');
+        Route::get('/stocks/movements/show/{id}', [StockController::class, 'show'])->name('stocks.movements.show');
+
+        // Stock Inventory
+        Route::get('/stocks/inventory', [StockController::class, 'inventory'])->name('stocks.inventory.index');
 
         //clients
         Route::get('/clients', [ClientsController::class, 'index'])->name('clients.index');

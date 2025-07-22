@@ -7,9 +7,16 @@
                         Products
                     </h2>
                 </div>
-                <div class="basis-1/2 flex justify-end">
+                <div class="basis-1/2 flex justify-end space-x-3">
+                    <a :href="route('stocks.dashboard')"
+                       class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded text-sm">
+                        Dashboard
+                    </a>
+                    <PrimaryButton type="link" :href="route('stocks.inventory.index')" variant="secondary">
+                        Stock Inventory
+                    </PrimaryButton>
                     <PrimaryButton type="link" :href="route('stocks.movements.create')">
-                        Add
+                        Add Movement
                     </PrimaryButton>
                 </div>
             </div>
@@ -22,8 +29,8 @@
                     <Table
                         :headers="headers"
                         :rows="rows"
-                        :hasActions="hasActions"
-                        @edit="handleEdit"
+                        :actions="actions"
+                        @action="handleAction"
                     />
                 </div>
             </div>
@@ -32,7 +39,6 @@
 </template>
 
 <script>
-import AdminLayout from "@/Layouts/AdminLayout.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import Table from "@/Components/Table.vue";
 import {router} from "@inertiajs/vue3";
@@ -54,14 +60,62 @@ export default {
         return {
             headers: ['Id', 'Product', 'Type', 'Quantity', 'Cost', 'Sale','Created'],
             rows: [],
-            hasActions: true
+            actions: [
+                {
+                    name: 'view',
+                    label: 'View Details',
+                    icon: 'fas fa-eye',
+                    type: 'default'
+                },
+                {
+                    name: 'edit',
+                    label: 'Edit',
+                    icon: 'fas fa-edit',
+                    type: 'default'
+                },
+                {
+                    name: 'delete',
+                    label: 'Delete',
+                    icon: 'fas fa-trash',
+                    type: 'danger'
+                }
+            ]
         };
     },
     methods: {
+        handleAction(payload) {
+            const { action, row } = payload;
+
+            switch (action) {
+                case 'view':
+                    this.handleView(row);
+                    break;
+                case 'edit':
+                    this.handleEdit(row);
+                    break;
+                case 'delete':
+                    this.handleDelete(row);
+                    break;
+                default:
+                    console.warn('Unknown action:', action);
+            }
+        },
+        handleView(movement) {
+            router.get(route('stocks.movements.show', {
+                id: movement.id
+            }));
+        },
         handleEdit(movement) {
             router.get(route('stocks.movements.edit', {
                 id: movement.id
             }));
+        },
+        handleDelete(movement) {
+            if (confirm('Are you sure you want to delete this movement?')) {
+                router.delete(route('stocks.movements.destroy', {
+                    id: movement.id
+                }));
+            }
         },
         transformBrandsToRows(movements) {
             return movements.map(movement => ({

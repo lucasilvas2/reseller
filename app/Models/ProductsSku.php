@@ -23,4 +23,9 @@ class ProductsSku extends Model
     {
         return $this->belongsTo(Products::class, 'product_id');
     }
+
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class, 'product_sku_id');
+    }
 }
