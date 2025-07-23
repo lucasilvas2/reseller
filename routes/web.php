@@ -7,6 +7,7 @@ use App\Http\Controllers\DealershipsController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\PublicDealershipsController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -26,9 +27,7 @@ Route::middleware([
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [StockController::class, 'dashboard'])->name('dashboard');
 
     Route::middleware(['role:dealer'])->group(function () {
         Route::get('/products', [ProductsController::class, 'index'])->name('products.index');
@@ -39,14 +38,13 @@ Route::middleware([
         Route::delete('/products/destroy/{id}', [ProductsController::class, 'destroy'])->name('products.destroy');
 
         //stocks
-        Route::get('/stocks/dashboard', [StockController::class, 'dashboard'])->name('stocks.dashboard');
-        Route::get('/stocks/movements', [StockController::class, 'index'])->name('stocks.movements.index');
-        Route::get('/stocks/movements/create', [StockController::class, 'create'])->name('stocks.movements.create');
-        Route::post('/stocks/movements/store', [StockController::class, 'store'])->name('stocks.movements.store');
-        Route::get('/stocks/movements/edit/{id}', [StockController::class, 'edit'])->name('stocks.movements.edit');
-        Route::put('/stocks/movements/update/{id}', [StockController::class, 'update'])->name('stocks.movements.update');
-        Route::delete('/stocks/movements/destroy/{id}', [StockController::class, 'destroy'])->name('stocks.movements.destroy');
-        Route::get('/stocks/movements/show/{id}', [StockController::class, 'show'])->name('stocks.movements.show');
+        Route::get('/stocks/movements', [StockMovementController::class, 'index'])->name('stocks.movements.index');
+        Route::get('/stocks/movements/create', [StockMovementController::class, 'create'])->name('stocks.movements.create');
+        Route::post('/stocks/movements/store', [StockMovementController::class, 'store'])->name('stocks.movements.store');
+        Route::get('/stocks/movements/edit/{id}', [StockMovementController::class, 'edit'])->name('stocks.movements.edit');
+        Route::put('/stocks/movements/update/{id}', [StockMovementController::class, 'update'])->name('stocks.movements.update');
+        Route::delete('/stocks/movements/destroy/{id}', [StockMovementController::class, 'destroy'])->name('stocks.movements.destroy');
+        Route::get('/stocks/movements/show/{id}', [StockMovementController::class, 'show'])->name('stocks.movements.show');
 
         // Stock Inventory
         Route::get('/stocks/inventory', [StockController::class, 'inventory'])->name('stocks.inventory.index');

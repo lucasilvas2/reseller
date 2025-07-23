@@ -103,9 +103,6 @@ const logout = () => {
                                             </template>
 
                                             <template #content>
-                                                <DropdownLink :href="route('stocks.dashboard')">
-                                                    Dashboard
-                                                </DropdownLink>
                                                 <DropdownLink :href="route('stocks.movements.index')">
                                                     Movements
                                                 </DropdownLink>
@@ -299,7 +296,7 @@ const logout = () => {
                                     Stock Management
                                 </div>
                             </div>
-                            <ResponsiveNavLink :href="route('stocks.dashboard')" :active="route().current('stocks.dashboard')">
+                            <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                 Dashboard
                             </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('stocks.movements.index')" :active="route().current('stocks.movements.*')">

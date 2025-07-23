@@ -8,7 +8,7 @@
                     </h2>
                 </div>
                 <div class="basis-1/2 flex justify-end space-x-3">
-                    <a :href="route('stocks.dashboard')"
+                    <a :href="route('dashboard')"
                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded text-sm">
                         Dashboard
                     </a>
@@ -85,23 +85,13 @@
 
                 <!-- Filters -->
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg mb-6 p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Search Product</label>
-                            <input
-                                v-model="filters.search"
-                                type="text"
-                                placeholder="Product name, SKU, or barcode..."
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                @input="filterInventory"
-                            />
-                        </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Stock Status</label>
                             <select
-                                v-model="filters.stockStatus"
+                                v-model="localFilters.stockStatus"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                @change="filterInventory"
+                                @change="applyFilters"
                             >
                                 <option value="">All Stock</option>
                                 <option value="in-stock">In Stock</option>
@@ -112,9 +102,9 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
                             <select
-                                v-model="filters.sortBy"
+                                v-model="localFilters.sortBy"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                @change="filterInventory"
+                                @change="applyFilters"
                             >
                                 <option value="current_stock">Stock Quantity</option>
                                 <option value="product_name">Product Name</option>
@@ -135,11 +125,15 @@
 
                 <!-- Inventory Table -->
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
-                    <Table
+                    <ServerPaginatedTable
+                        title="Inventory Items"
                         :headers="headers"
-                        :rows="filteredInventory"
+                        :data="transformedInventory"
+                        :pagination="pagination"
+                        :filters="filters"
                         :actions="actions"
                         @action="handleAction"
+                        route-name="stocks.inventory.index"
                     />
                 </div>
             </div>
@@ -150,29 +144,43 @@
 <script>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
-import Table from "@/Components/Table.vue";
+import ServerPaginatedTable from "@/Components/ServerPaginatedTable.vue";
 import { router } from "@inertiajs/vue3";
 
 export default {
     components: {
         AppLayout,
         PrimaryButton,
-        Table,
+        ServerPaginatedTable,
     },
     props: {
         inventory: {
             type: Array,
             required: true,
         },
+        pagination: {
+            type: Object,
+            required: true,
+        },
+        filters: {
+            type: Object,
+            default: () => ({})
+        }
     },
     data() {
         return {
-            headers: ['Product', 'SKU', 'Current Stock', 'Cost Price', 'Sale Price', 'Stock Value', 'Last Movement'],
-            filteredInventory: [],
-            filters: {
-                search: '',
-                stockStatus: '',
-                sortBy: 'current_stock',
+            headers: [
+                { label: 'Product', key: 'product' },
+                { label: 'SKU', key: 'sku' },
+                { label: 'Current Stock', key: 'current stock' },
+                { label: 'Cost Price', key: 'cost price' },
+                { label: 'Sale Price', key: 'sale price' },
+                { label: 'Stock Value', key: 'stock value' },
+                { label: 'Last Movement', key: 'last movement' }
+            ],
+            localFilters: {
+                stockStatus: this.filters.stock_status || '',
+                sortBy: this.filters.sort_by || 'current_stock',
             },
             actions: [
                 {
@@ -209,11 +217,9 @@ export default {
                 totalValue: this.formatPrice(totalValue),
                 potentialRevenue: this.formatPrice(potentialRevenue),
             };
-        }
-    },
-    methods: {
-        transformInventoryToRows(inventory) {
-            return inventory.map(item => ({
+        },
+        transformedInventory() {
+            return this.inventory.map(item => ({
                 id: item.id,
                 product: item.product_name,
                 sku: item.sku || 'N/A',
@@ -225,7 +231,9 @@ export default {
                 // Mantém dados originais para ações
                 _original: item
             }));
-        },
+        }
+    },
+    methods: {
         getStockDisplay(stock) {
             let display = stock.toString();
             if (stock <= 0) {
@@ -245,57 +253,32 @@ export default {
                 day: 'numeric'
             });
         },
-        filterInventory() {
-            let filtered = [...this.inventory];
+        applyFilters() {
+            const params = {
+                page: 1,
+                stock_status: this.localFilters.stockStatus || undefined,
+                sort_by: this.localFilters.sortBy || undefined,
+                sort_order: this.localFilters.sortBy === 'product_name' ? 'asc' : 'desc',
+            };
 
-            // Filter by search
-            if (this.filters.search) {
-                const search = this.filters.search.toLowerCase();
-                filtered = filtered.filter(item =>
-                    item.product_name.toLowerCase().includes(search) ||
-                    (item.sku && item.sku.toLowerCase().includes(search)) ||
-                    (item.barcode && item.barcode.toLowerCase().includes(search))
-                );
-            }
-
-            // Filter by stock status
-            if (this.filters.stockStatus) {
-                switch (this.filters.stockStatus) {
-                    case 'in-stock':
-                        filtered = filtered.filter(item => item.current_stock > 10);
-                        break;
-                    case 'low-stock':
-                        filtered = filtered.filter(item => item.current_stock > 0 && item.current_stock <= 10);
-                        break;
-                    case 'out-of-stock':
-                        filtered = filtered.filter(item => item.current_stock <= 0);
-                        break;
-                }
-            }
-
-            // Sort
-            filtered.sort((a, b) => {
-                switch (this.filters.sortBy) {
-                    case 'product_name':
-                        return a.product_name.localeCompare(b.product_name);
-                    case 'stock_value':
-                        return b.stock_value - a.stock_value;
-                    case 'last_movement':
-                        return new Date(b.last_movement || 0) - new Date(a.last_movement || 0);
-                    default: // current_stock
-                        return b.current_stock - a.current_stock;
+            // Remove undefined values
+            Object.keys(params).forEach(key => {
+                if (params[key] === undefined) {
+                    delete params[key];
                 }
             });
 
-            this.filteredInventory = this.transformInventoryToRows(filtered);
+            router.get(route('stocks.inventory.index'), params, {
+                preserveState: true,
+                preserveScroll: true,
+            });
         },
         resetFilters() {
-            this.filters = {
-                search: '',
+            this.localFilters = {
                 stockStatus: '',
                 sortBy: 'current_stock',
             };
-            this.filterInventory();
+            this.applyFilters();
         },
         handleAction(payload) {
             const { action, row } = payload;
@@ -335,9 +318,6 @@ export default {
                 type: 'OUT'
             }));
         }
-    },
-    mounted() {
-        this.filterInventory();
     },
 };
 </script>
