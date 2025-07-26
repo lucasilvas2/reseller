@@ -7,6 +7,7 @@ use App\Models\StockMovement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -163,7 +164,7 @@ class InventoryRepository
     /**
      * Get inventory with calculated stock levels
      */
-    public function getInventoryWithStock(array $filters = []): Collection
+    public function getInventoryWithStock(array $filters = []): SupportCollection
     {
         $inventory = $this->getAll($filters);
 
@@ -336,7 +337,7 @@ class InventoryRepository
     /**
      * Search inventory items
      */
-    public function search(string $term): Collection
+    public function search(string $term): SupportCollection
     {
         return $this->getInventoryWithStock(['search' => $term]);
     }
@@ -344,7 +345,7 @@ class InventoryRepository
     /**
      * Get items by product category
      */
-    public function getByCategory(string $category): Collection
+    public function getByCategory(string $category): SupportCollection
     {
         return $this->getInventoryWithStock(['category' => $category]);
     }

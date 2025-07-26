@@ -14,5 +14,6 @@ class Brands extends Model
     protected $fillable = [
         'name',
         'image_url',
+        'dealership_id',
     ];
 }

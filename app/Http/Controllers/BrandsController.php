@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Brands;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class BrandsController extends Controller
@@ -17,7 +18,7 @@ class BrandsController extends Controller
 
     public function index(): \Inertia\Response
     {
-        $brands = $this->brandsModel->all();
+        $brands = $this->brandsModel->where('dealership_id', Auth::user()->dealership_id)->get();
         return Inertia::render('Admin/Brands/Index', compact('brands'));
     }
 
@@ -33,6 +34,10 @@ class BrandsController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
+        $request->merge([
+            'dealership_id' => Auth::user()->dealership_id,
+        ]);
+
         $brand = $this->brandsModel->create($request->all());
 
         if ($request->hasFile('image')) {
@@ -45,7 +50,7 @@ class BrandsController extends Controller
 
     public function edit(int $id): \Inertia\Response
     {
-        $brand = $this->brandsModel->findOrFail($id);
+        $brand = $this->brandsModel->where('dealership_id', Auth::user()->dealership_id)->findOrFail($id);
         return Inertia::render('Admin/Brands/Edit', compact('brand'));
     }
 
@@ -56,7 +61,7 @@ class BrandsController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        $brand = $this->brandsModel->findOrFail($id);
+        $brand = $this->brandsModel->where('dealership_id', Auth::user()->dealership_id)->findOrFail($id);
         $brand->update($request->all());
 
         if ($request->hasFile('image')) {
@@ -69,7 +74,7 @@ class BrandsController extends Controller
 
     public function destroy(int $id): \Illuminate\Http\RedirectResponse
     {
-        $brand = $this->brandsModel->findOrFail($id);
+        $brand = $this->brandsModel->where('dealership_id', Auth::user()->dealership_id)->findOrFail($id);
         $brand->delete();
 
         return redirect()->route('admin.brands.index');

@@ -10,6 +10,7 @@ use App\Http\Traits\ServerPaginationTrait;
 use App\Repositories\StockMovementRepository;
 use App\Models\Products;
 use App\Models\ProductsSku;
+use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -21,15 +22,18 @@ class StockMovementController extends Controller
     use ServerPaginationTrait;
 
     protected StockMovementRepository $stockMovementRepository;
+    protected StockMovement $stockMovement;
     protected Products $products;
     protected ProductsSku $productsSku;
 
     public function __construct(
         StockMovementRepository $stockMovementRepository,
+        StockMovement $stockMovement,
         Products $products,
         ProductsSku $productsSku
     ) {
         $this->stockMovementRepository = $stockMovementRepository;
+        $this->stockMovement = $stockMovement;
         $this->products = $products;
         $this->productsSku = $productsSku;
     }

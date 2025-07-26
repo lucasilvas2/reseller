@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Brands;
 use App\Models\Products;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProductsController extends Controller
 {
@@ -15,15 +16,93 @@ class ProductsController extends Controller
         $this->productsModel = new Products();
     }
 
-    public function index(): \Inertia\Response
+    public function index(Request $request): \Inertia\Response
     {
-        $products = $this->productsModel->all();
-        return inertia('App/Products/Index', compact('products'));
+        $query = $this->productsModel->where('dealership_id', Auth::user()->dealership_id)
+            ->with('brands');
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('brands', function($brandQuery) use ($search) {
+                      $brandQuery->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Apply name filter
+        if ($request->filled('name')) {
+            $query->where('name', 'like', "%{$request->name}%");
+        }
+
+        // Apply brand filter
+        if ($request->filled('brand_id')) {
+            $query->where('brand_id', $request->brand_id);
+        }
+
+        // Apply date filters
+        if ($request->filled('date_from')) {
+            $query->where('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->where('created_at', '<=', $request->date_to . ' 23:59:59');
+        }
+
+        // Apply sorting
+        $sortKey = $request->get('sort', 'created_at');
+        $sortOrder = $request->get('order', 'desc');
+
+        if ($sortKey === 'brand_name') {
+            $query->join('brands', 'products.brand_id', '=', 'brands.id')
+                  ->orderBy('brands.name', $sortOrder)
+                  ->select('products.*');
+        } else {
+            $query->orderBy($sortKey, $sortOrder);
+        }
+
+        // Get paginated results
+        $perPage = $request->get('per_page', 10);
+        $products = $query->paginate($perPage);
+
+        // Transform data for frontend
+        $transformedData = collect($products->items())->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'description' => $product->description,
+                'brand_name' => $product->brands->name ?? 'N/A',
+                'brand_id' => $product->brand_id,
+                'created_at' => $product->created_at,
+                'created_at_formatted' => $product->created_at->format('M d, Y H:i'),
+            ];
+        });
+
+        // Get brands for filter dropdown
+        $brands = Brands::where('dealership_id', Auth::user()->dealership_id)->get();
+
+        return inertia('App/Products/Index', [
+            'data' => $transformedData,
+            'pagination' => [
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'per_page' => $products->perPage(),
+                'total' => $products->total(),
+                'from' => $products->firstItem(),
+                'to' => $products->lastItem(),
+                'links' => [],
+            ],
+            'filters' => $request->only(['search', 'name', 'brand_id', 'date_from', 'date_to', 'sort', 'order']),
+            'brands' => $brands
+        ]);
     }
 
     public function create(): \Inertia\Response
     {
-        $brands = Brands::all();
+        $brands = Brands::where('dealership_id', Auth::user()->dealership_id)->get();
         return inertia('App/Products/Create', compact('brands'));
     }
 
@@ -37,7 +116,7 @@ class ProductsController extends Controller
         ]);
 
         $request->merge([
-            'dealership_id' => auth()->user()->dealership_id,
+            'dealership_id' => Auth::user()->dealership_id,
         ]);
 
         $product = $this->productsModel->create($request->all());
@@ -53,7 +132,7 @@ class ProductsController extends Controller
     public function edit(int $id): \Inertia\Response
     {
         $product = $this->productsModel->findOrFail($id);
-        $brands = Brands::all();
+        $brands = Brands::where('dealership_id', Auth::user()->dealership_id)->get();
         return inertia('App/Products/Edit', compact('product', 'brands'));
     }
 
@@ -75,5 +154,17 @@ class ProductsController extends Controller
         }
 
         return redirect()->route('products.index');
+    }
+
+    public function destroy(int $id): \Illuminate\Http\RedirectResponse
+    {
+        $product = $this->productsModel
+            ->where('dealership_id', Auth::user()->dealership_id)
+            ->findOrFail($id);
+
+        $product->delete();
+
+        return redirect()->route('products.index')
+            ->with('success', 'Product deleted successfully!');
     }
 }
