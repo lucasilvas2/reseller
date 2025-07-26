@@ -15,12 +15,14 @@ const form = useForm({
     cost_price: null,
     sale_price: null,
     product_id: null,
+    type: 'in', // Default to 'in' (entrada)
     errors: {},
 });
 
 const submitForm = () => {
-    form.post('/stocks/movements/store', {
+    form.post('/stock-movements', {
         onSuccess: () => {
+            // Redirect will be handled by the controller
         },
         onError: (errors) => {
             form.errors = errors;
@@ -107,6 +109,19 @@ const submitForm = () => {
                                     autocomplete="quantity"
                                 />
                                 <InputError class="mt-2" :message="form.errors.quantity"/>
+                            </div>
+                            <div>
+                                <InputLabel for="type" value="Tipo de Movimentação"/>
+                                <SelectInput
+                                    class="w-full"
+                                    v-model="form.type"
+                                    :options="[
+                                        { value: 'in', label: 'Entrada' },
+                                        { value: 'out', label: 'Saída' }
+                                    ]"
+                                    required
+                                />
+                                <InputError class="mt-2" :message="form.errors.type"/>
                             </div>
                             <div>
                                 <InputLabel for="products" value="Products"/>

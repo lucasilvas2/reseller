@@ -1,66 +1,250 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistema de Gestão para Concessionárias
 
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+> **Status do Projeto**: Em desenvolvimento ativo  
+> **Branch atual**: `feature/create-pages-stock`  
+> **Funcionalidade em foco**: Sistema completo de gestão de estoque
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Sobre o Projeto
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Este é um sistema completo de gestão para concessionárias, desenvolvido para facilitar o controle de estoque, produtos, clientes e movimentações. O sistema oferece diferentes níveis de acesso para administradores, dealers (concessionários) e usuários finais.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Funcionalidades Principais
 
-## Learning Laravel
+- **Gestão de Produtos**: Cadastro e controle de produtos com SKUs, preços e categorias
+- **Controle de Estoque**: Movimentações de entrada e saída com rastreamento completo
+- **Dashboard Analítico**: Gráficos e métricas de desempenho em tempo real
+- **Gestão de Clientes**: Sistema de convites e controle de acesso por concessionária
+- **Sistema Multi-tenant**: Isolamento de dados por concessionária
+- **Controle de Permissões**: Sistema robusto de roles e permissões
+- **Área Administrativa**: Painel completo para gerenciamento do sistema
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Tecnologias Utilizadas
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Stack Principal
+- **Laravel 12.0** - Framework PHP
+- **PHP 8.2+** - Backend
+- **Vue.js 3** - Frontend SPA
+- **Inertia.js** - Conexão Laravel + Vue
+- **MySQL 8.0** - Banco de dados (produção)
+- **SQLite** - Banco de dados (desenvolvimento)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Interface e Gráficos
+- **Tailwind CSS** - Framework CSS
+- **ECharts** - Biblioteca de gráficos
+- **Vite** - Build tool
 
-## Laravel Sponsors
+### Infraestrutura
+- **Docker & Docker Compose** - Containerização
+- **Elasticsearch** - Busca avançada
+- **LocalStack** - Simulação AWS S3
+- **Redis** - Cache (opcional)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Ferramentas
+- **Spatie Laravel Permission** - Sistema de permissões
+- **PHPUnit** - Testes
 
-### Premium Partners
+## Estrutura do Sistema
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### Tipos de Usuário
 
-## Contributing
+1. **Admin**: Acesso completo ao sistema
+   - Gerenciamento de usuários, concessionárias e marcas
+   - Controle total de permissões
+   - Auditoria de ações administrativas
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+2. **Dealer**: Gestores de concessionárias
+   - Gestão de produtos e estoque da concessionária
+   - Controle de clientes e movimentações
+   - Dashboard com métricas da concessionária
 
-## Code of Conduct
+3. **User**: Usuários finais/clientes
+   - Visualização de concessionárias disponíveis
+   - Acesso limitado conforme permissões
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Arquitetura
 
-## Security Vulnerabilities
+### Stack Tecnológico
+- **Backend**: Laravel 12 + PHP 8.2+
+- **Frontend**: Vue.js 3 + Inertia.js (SPA)
+- **Banco**: MySQL 8.0 (produção) / SQLite (desenvolvimento)
+- **Cache**: Database/Redis (configurável)
+- **Armazenamento**: Local / AWS S3
+- **Busca**: Elasticsearch (Docker)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Ambientes
 
-## License
+**Desenvolvimento Local**: SQLite + Database cache + Log files  
+**Produção/Docker**: MySQL + Redis + SMTP + S3 + Elasticsearch
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Funcionalidades
+
+### ✅ Implementado
+- **Autenticação completa** - Login, 2FA, roles e permissões
+- **Gestão de produtos** - CRUD com SKUs, preços e categorias
+- **Controle de estoque** - Movimentações, histórico e alertas
+- **Gestão de clientes** - Convites por email e associações
+- **Dashboard analítico** - Gráficos ECharts em tempo real
+- **Sistema de busca** - Filtros avançados e paginação server-side
+
+### 🚀 Em desenvolvimento
+- Integração Elasticsearch
+- Relatórios exportáveis
+- API REST completa
+- Notificações push
+
+## Instalação
+
+### Pré-requisitos
+- **PHP 8.2+** e **Composer**
+- **Node.js 18+** e **npm**
+- **Docker** (opcional - para ambiente completo)
+
+### Desenvolvimento Local (Simples)
+
+```bash
+# Clone e instale
+git clone <repository-url>
+cd dealer
+composer install && npm install
+
+# Configure
+cp .env.example .env
+php artisan key:generate
+
+# Banco SQLite e assets
+php artisan migrate --seed
+npm run build
+
+# Inicie tudo
+composer run dev
+```
+
+### Ambiente Completo (Docker)
+
+```bash
+# Após clonar e instalar dependências
+docker-compose up -d
+
+# Configure MySQL no .env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3326
+
+# Migre e inicie
+php artisan migrate --seed
+composer run dev
+```
+
+### Serviços Disponíveis
+- **Aplicação**: `localhost:8000`
+- **MySQL**: `localhost:3326`
+- **Elasticsearch**: `localhost:9200`
+- **LocalStack**: `localhost:4566`
+
+### Executar o Projeto
+
+### Comandos Úteis
+
+```bash
+# Desenvolvimento
+composer run dev          # Inicia servidor + filas + logs + vite
+
+# Docker
+docker-compose up -d      # Inicia containers
+docker-compose down       # Para containers
+
+# Banco
+php artisan migrate       # Executa migrações
+php artisan migrate:fresh --seed  # Reset completo
+
+# Cache
+php artisan optimize:clear   # Limpa cache
+php artisan optimize        # Otimiza para produção
+```
+
+## Configuração
+
+### Variáveis de Ambiente Principais
+
+```env
+# Banco de dados
+DB_CONNECTION=sqlite                    # ou mysql
+DB_HOST=127.0.0.1                      # se mysql
+DB_PORT=3326                           # se mysql
+
+# Cache e Sessões  
+CACHE_STORE=database                   # ou redis
+SESSION_DRIVER=database                # ou redis
+
+# Email
+MAIL_MAILER=smtp
+MAIL_HOST=seu-servidor-smtp
+
+# AWS/LocalStack
+AWS_ENDPOINT=http://localhost:4566
+AWS_BUCKET=meu-bucket
+```
+
+### Deploy
+
+```bash
+# Produção
+composer install --no-dev --optimize-autoloader
+npm run build
+php artisan config:cache
+php artisan route:cache
+php artisan migrate --force
+```
+
+## Testes
+
+```bash
+php artisan test                    # Todos os testes
+php artisan test --filter AdminUserTest  # Teste específico
+```
+
+## Estrutura
+
+```
+app/
+├── Http/Controllers/     # Controllers
+├── Models/              # Models Eloquent  
+├── Enums/              # Enumerações
+└── Mail/               # Classes de email
+
+resources/js/
+├── Pages/              # Páginas Vue.js
+└── Components/         # Componentes reutilizáveis
+
+database/
+├── migrations/         # Migrações
+└── seeders/           # Dados iniciais
+```
+
+## Segurança
+
+- Autenticação 2FA
+- Rate limiting  
+- Proteção CSRF
+- Auditoria de ações
+- Isolamento multi-tenant
+
+## Contribuição
+
+Para contribuir com o projeto:
+
+1. Fork o repositório
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
+3. Commit suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
+
+## Licença
+
+Este projeto está licenciado sob a [MIT license](https://opensource.org/licenses/MIT).

@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreStockMovementRequest;
+use App\Http\Requests\UpdateStockMovementRequest;
+use App\Http\Resources\StockMovementResource;
+use App\Http\Resources\StockMovementCollection;
 use App\Http\Traits\ServerPaginationTrait;
-use App\Models\StockMovement;
+use App\Repositories\StockMovementRepository;
 use App\Models\Products;
 use App\Models\ProductsSku;
 use Illuminate\Http\Request;
@@ -16,41 +20,50 @@ class StockMovementController extends Controller
 {
     use ServerPaginationTrait;
 
-    protected StockMovement $stockMovement;
+    protected StockMovementRepository $stockMovementRepository;
     protected Products $products;
     protected ProductsSku $productsSku;
 
-    public function __construct(StockMovement $stockMovement, Products $products, ProductsSku $productsSku)
-    {
-        $this->stockMovement = $stockMovement;
+    public function __construct(
+        StockMovementRepository $stockMovementRepository,
+        Products $products,
+        ProductsSku $productsSku
+    ) {
+        $this->stockMovementRepository = $stockMovementRepository;
         $this->products = $products;
         $this->productsSku = $productsSku;
     }
 
     public function index(Request $request): Response
     {
-        // Base query with relationships
-        $query = $this->stockMovement->where('dealership_id', Auth::user()->dealership_id)
-            ->with(['productSku.products', 'user']);
+        $query = $this->buildMovementsQuery($request);
+        $paginatedMovements = $this->applyPagination($query, $request);
+        $movements = $this->transformMovementsData($paginatedMovements);
+        $response = $this->buildIndexResponse($paginatedMovements, $movements, $request);
 
-        // Apply additional filters specific to movements
-        if ($request->get('type')) {
-            $query->where('type', $request->get('type'));
-        }
+        return Inertia::render('App/Stocks/Movements/Index', $response);
+    }
 
-        if ($request->get('product_sku_id')) {
-            $query->where('product_sku_id', $request->get('product_sku_id'));
-        }
+    /**
+     * Build base query with filters for movements
+     */
+    private function buildMovementsQuery(Request $request): \Illuminate\Database\Eloquent\Builder
+    {
+        $filters = [
+            'type' => $request->get('type'),
+            'product_sku_id' => $request->get('product_sku_id'),
+            'date_from' => $request->get('date_from'),
+            'date_to' => $request->get('date_to'),
+        ];
 
-        if ($request->get('date_from')) {
-            $query->whereDate('created_at', '>=', $request->get('date_from'));
-        }
+        return $this->stockMovementRepository->getFilteredQuery($filters);
+    }
 
-        if ($request->get('date_to')) {
-            $query->whereDate('created_at', '<=', $request->get('date_to'));
-        }
-
-        // Define searchable and sortable fields
+    /**
+     * Apply pagination and sorting to movements query
+     */
+    private function applyPagination(\Illuminate\Database\Eloquent\Builder $query, Request $request)
+    {
         $searchableFields = [
             'productSku.sku',
             'productSku.products.name',
@@ -67,8 +80,7 @@ class StockMovementController extends Controller
             'user_name'     // Custom field handled separately
         ];
 
-        // Apply server-side pagination
-        $paginatedMovements = $this->applyServerPagination(
+        return $this->applyServerPagination(
             $query,
             $request,
             $searchableFields,
@@ -76,9 +88,14 @@ class StockMovementController extends Controller
             'created_at',
             'desc'
         );
+    }
 
-        // Transform data for frontend
-        $movements = collect($paginatedMovements->items())->map(function ($movement) {
+    /**
+     * Transform movements data for frontend
+     */
+    private function transformMovementsData($paginatedMovements): \Illuminate\Support\Collection
+    {
+        return collect($paginatedMovements->items())->map(function ($movement) {
             return [
                 'id' => $movement->id,
                 'product_name' => $movement->productSku->products->name ?? 'N/A',
@@ -96,8 +113,13 @@ class StockMovementController extends Controller
                 '_original' => $movement
             ];
         });
+    }
 
-        // Prepare response
+    /**
+     * Build complete response for index view
+     */
+    private function buildIndexResponse($paginatedMovements, \Illuminate\Support\Collection $movements, Request $request): array
+    {
         $response = $this->formatPaginationResponse($paginatedMovements, $request);
         $response['data'] = $movements;
 
@@ -110,11 +132,28 @@ class StockMovementController extends Controller
         ]);
 
         // Add additional data
-        $response['products'] = $this->products->where('dealership_id', Auth::user()->dealership_id)
+        $response['products'] = $this->getProductsForFilter();
+        $response['product_skus'] = $this->getProductSkusForFilter();
+
+        return $response;
+    }
+
+    /**
+     * Get products list for filter dropdown
+     */
+    private function getProductsForFilter(): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->products->where('dealership_id', Auth::user()->dealership_id)
             ->select('id', 'name')
             ->get();
+    }
 
-        $response['product_skus'] = $this->productsSku->where('dealership_id', Auth::user()->dealership_id)
+    /**
+     * Get product SKUs list for filter dropdown
+     */
+    private function getProductSkusForFilter(): \Illuminate\Support\Collection
+    {
+        return $this->productsSku->where('dealership_id', Auth::user()->dealership_id)
             ->with('products:id,name')
             ->select('id', 'product_id', 'sku')
             ->get()
@@ -126,8 +165,6 @@ class StockMovementController extends Controller
                     'display_name' => ($sku->products->name ?? 'N/A') . ' - ' . $sku->sku
                 ];
             });
-
-        return Inertia::render('App/Stocks/Movements/Index', $response);
     }
 
     public function create(): Response
@@ -136,17 +173,8 @@ class StockMovementController extends Controller
         return Inertia::render('App/Stocks/Movements/Create', compact('products'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreStockMovementRequest $request): RedirectResponse
     {
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'sku' => 'nullable|string|max:255',
-            'quantity' => 'required|integer|min:0',
-            'cost_price' => 'required|numeric|min:0',
-            'sale_price' => 'required|numeric|min:0',
-            'barcode' => 'nullable|string|max:255',
-            'type' => 'required|in:in,out',
-        ]);
 
         // Find or create product SKU
         $productSku = $this->productsSku->firstOrCreate([
@@ -194,21 +222,17 @@ class StockMovementController extends Controller
         return Inertia::render('App/Stocks/Movements/Edit', compact('movement', 'products'));
     }
 
-    public function update($id, Request $request): RedirectResponse
+    public function update($id, UpdateStockMovementRequest $request): RedirectResponse
     {
         $movement = $this->stockMovement->where('id', $id)
             ->where('dealership_id', Auth::user()->dealership_id)
             ->with('productSku')
             ->firstOrFail();
 
-        $request->validate([
-            'quantity' => 'required|integer|min:0',
-            'type' => 'required|in:in,out',
-        ]);
-
         $movement->update([
             'quantity' => $request->quantity,
             'type' => $request->type,
+            'description' => $request->description,
         ]);
 
         return redirect()->route('stocks.movements.index')
@@ -225,5 +249,76 @@ class StockMovementController extends Controller
 
         return redirect()->route('stocks.movements.index')
             ->with('success', 'Movement deleted successfully!');
+    }
+
+    /**
+     * Get movements data for API (JSON response)
+     */
+    public function apiIndex(Request $request): StockMovementCollection
+    {
+        $query = $this->buildMovementsQuery($request);
+        $paginatedMovements = $this->applyPagination($query, $request);
+
+        return new StockMovementCollection($paginatedMovements->items());
+    }
+
+    /**
+     * Get single movement for API (JSON response)
+     */
+    public function apiShow($id): StockMovementResource
+    {
+        $movement = $this->stockMovement->where('id', $id)
+            ->where('dealership_id', Auth::user()->dealership_id)
+            ->with(['productSku.products', 'user'])
+            ->firstOrFail();
+
+        return new StockMovementResource($movement);
+    }
+
+    /**
+     * Create movement via API (JSON response)
+     */
+    public function apiStore(StoreStockMovementRequest $request): StockMovementResource
+    {
+        // Find or create product SKU
+        $productSku = $this->productsSku->firstOrCreate([
+            'product_id' => $request->product_id,
+            'sku' => $request->sku,
+            'dealership_id' => Auth::user()->dealership_id,
+        ], [
+            'barcode' => $request->barcode,
+            'cost_price' => $request->cost_price,
+            'sale_price' => $request->sale_price,
+        ]);
+
+        // Create movement
+        $movement = $this->stockMovement->create([
+            'product_sku_id' => $productSku->id,
+            'quantity' => $request->quantity,
+            'type' => $request->type,
+            'description' => $request->description,
+            'user_id' => Auth::id(),
+            'dealership_id' => Auth::user()->dealership_id,
+        ]);
+
+        // Load relationships for response
+        $movement->load(['productSku.products', 'user']);
+
+        return new StockMovementResource($movement);
+    }
+
+    /**
+     * Update movement via API (JSON response)
+     */
+    public function apiUpdate(UpdateStockMovementRequest $request, $id): StockMovementResource
+    {
+        $movement = $this->stockMovement->where('id', $id)
+            ->where('dealership_id', Auth::user()->dealership_id)
+            ->firstOrFail();
+
+        $movement->update($request->validated());
+        $movement->load(['productSku.products', 'user']);
+
+        return new StockMovementResource($movement);
     }
 }

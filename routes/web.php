@@ -3,10 +3,11 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BrandsController;
 use App\Http\Controllers\ClientsController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DealershipsController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\PublicDealershipsController;
-use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
@@ -27,7 +28,7 @@ Route::middleware([
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
-    Route::get('/dashboard', [StockController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::middleware(['role:dealer'])->group(function () {
         Route::get('/products', [ProductsController::class, 'index'])->name('products.index');
@@ -37,17 +38,26 @@ Route::middleware([
         Route::post('/products/update/{id}', [ProductsController::class, 'update'])->name('products.update');
         Route::delete('/products/destroy/{id}', [ProductsController::class, 'destroy'])->name('products.destroy');
 
-        //stocks
-        Route::get('/stocks/movements', [StockMovementController::class, 'index'])->name('stocks.movements.index');
-        Route::get('/stocks/movements/create', [StockMovementController::class, 'create'])->name('stocks.movements.create');
-        Route::post('/stocks/movements/store', [StockMovementController::class, 'store'])->name('stocks.movements.store');
-        Route::get('/stocks/movements/edit/{id}', [StockMovementController::class, 'edit'])->name('stocks.movements.edit');
-        Route::put('/stocks/movements/update/{id}', [StockMovementController::class, 'update'])->name('stocks.movements.update');
-        Route::delete('/stocks/movements/destroy/{id}', [StockMovementController::class, 'destroy'])->name('stocks.movements.destroy');
-        Route::get('/stocks/movements/show/{id}', [StockMovementController::class, 'show'])->name('stocks.movements.show');
+        // Inventory Management
+        Route::prefix('inventory')->name('inventory.')->group(function () {
+            Route::get('/', [InventoryController::class, 'index'])->name('index');
+        });
 
-        // Stock Inventory
-        Route::get('/stocks/inventory', [StockController::class, 'inventory'])->name('stocks.inventory.index');
+        // Stock Movements (RESTful Resource)
+        Route::resource('stock-movements', StockMovementController::class, [
+            'names' => [
+                'index' => 'stocks.movements.index',
+                'create' => 'stocks.movements.create',
+                'store' => 'stocks.movements.store',
+                'show' => 'stocks.movements.show',
+                'edit' => 'stocks.movements.edit',
+                'update' => 'stocks.movements.update',
+                'destroy' => 'stocks.movements.destroy'
+            ]
+        ]);
+
+        // Legacy routes for backward compatibility (will be removed)
+        Route::get('/stocks/inventory', [InventoryController::class, 'index'])->name('stocks.inventory.index');
 
         //clients
         Route::get('/clients', [ClientsController::class, 'index'])->name('clients.index');
