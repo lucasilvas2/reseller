@@ -15,29 +15,27 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         // Criar usuário admin se não existir
-//        $adminUser = User::firstOrCreate(
-//            ['email' => 'admin@admin.com'],
-//            [
-//                'name' => 'Administrator',
-//                'email' => 'admin@admin.com',
-//                'password' => Hash::make(env('ADMIN_DEFAULT_PASSWORD', 'AdminSecure123!')),
-//                'email_verified_at' => now(),
-//            ]
-//        );
-
-        // Garantir que o role admin existe
-//        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+       $adminUser = User::firstOrCreate(
+           ['email' => 'admin@example.com'],
+           [
+               'name' => 'Administrator',
+               'email' => 'admin@example.com',
+               'password' => Hash::make('admin'),
+               'email_verified_at' => now(),
+           ]
+       );
 
         // Atribuir role admin ao usuário
-//        if (!$adminUser->hasRole('admin')) {
-//            $adminUser->assignRole('admin');
-//        }
+       if (!$adminUser->hasRole('admin')) {
+           $adminUser->assignRole('admin');
+       }
 
-        // Avisar sobre a senha padrão em desenvolvimento
-//        if (app()->environment('local') && env('ADMIN_DEFAULT_PASSWORD') === null) {
-//            echo "\n⚠️  AVISO: Usando senha padrão para admin. Configure ADMIN_DEFAULT_PASSWORD no .env\n";
-//            echo "📧 Email: admin@admin.com\n";
-//            echo "🔑 Senha: AdminSecure123!\n\n";
-//        }
+       // Garantir que o admin tenha todas as permissões
+       $adminRole = \Spatie\Permission\Models\Role::where('name', 'admin')->first();
+       $allPermissions = \Spatie\Permission\Models\Permission::all();
+       if ($adminRole) {
+           $adminRole->syncPermissions($allPermissions);
+       }
+       $adminUser->syncPermissions($allPermissions);
     }
 }

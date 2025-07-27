@@ -72,7 +72,7 @@ const logout = () => {
                                 </NavLink>
                             </div>
 
-                            <template v-if="hasRole('dealer')">
+                            <template v-if="hasRole('reseller')">
                                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                     <NavLink :href="route('clients.index')" :active="route().current('clients.index')">
                                         Clients

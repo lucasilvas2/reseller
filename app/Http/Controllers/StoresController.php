@@ -15,12 +15,72 @@ class StoresController extends Controller
         $this->storeModel = $storeModel;
     }
 
-    public function index(): \Inertia\Response
+    public function index(Request $request): \Inertia\Response
     {
-        $stores = $this->storeModel->all();
+        $query = $this->storeModel->newQuery();
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply name filter
+        if ($request->filled('name')) {
+            $query->where('name', 'like', "%" . $request->name . "%");
+        }
+
+        // Apply email filter
+        if ($request->filled('email')) {
+            $query->where('email', 'like', "%" . $request->email . "%");
+        }
+
+        // Apply date filters
+        if ($request->filled('date_from')) {
+            $query->where('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->where('created_at', '<=', $request->date_to);
+        }
+
+        // Apply sorting
+        $sortKey = $request->get('sort', 'created_at');
+        $sortOrder = $request->get('order', 'desc');
+
+        if( in_array($sortKey, ['name', 'email', 'created_at'])) {
+            $query->orderBy($sortKey, $sortOrder);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $perPage = $request->get('per_page', 10);
+        $stores = $query->paginate($perPage);
+
+        $transformedData = $stores->getCollection()->transform(function ($store) {
+            return [
+                'id' => $store->id,
+                'name' => $store->name,
+                'email' => $store->email,
+                'created_at' => $store->created_at->format('Y-m-d H:i:s'),
+            ];
+        });
 
         return Inertia::render('Admin/Stores/Index', [
-            'stores' => $stores,
+            'data' => $transformedData,
+            'pagination' => [
+                'current_page' => $stores->currentPage(),
+                'last_page' => $stores->lastPage(),
+                'per_page' => $stores->perPage(),
+                'total' => $stores->total(),
+                'from' => $stores->firstItem(),
+                'to' => $stores->lastItem(),
+                'links' => [],
+            ],
+            'filters' => $request->only(['search', 'name', 'email', 'date_from', 'date_to', 'sort', 'order']),
         ]);
     }
 

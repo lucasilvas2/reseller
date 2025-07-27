@@ -115,25 +115,5 @@ Route::prefix('admin')->group(function () {
         Route::post('/stores/update/{id}', [StoresController::class, 'update'])
             ->middleware('permission:admin.stores.update')
             ->name('admin.stores.update');
-
-        // Brands routes
-        Route::get('/brands', [BrandsController::class, 'index'])
-            ->middleware('permission:admin.brands.index')
-            ->name('admin.brands.index');
-        Route::get('/brands/create', [BrandsController::class, 'create'])
-            ->middleware('permission:admin.brands.create')
-            ->name('admin.brands.create');
-        Route::post('/brands/store', [BrandsController::class, 'store'])
-            ->middleware('permission:admin.brands.create')
-            ->name('admin.brands.store');
-        Route::get('/brands/edit/{id}', [BrandsController::class, 'edit'])
-            ->middleware('permission:admin.brands.edit')
-            ->name('admin.brands.edit');
-        Route::put('/brands/update/{id}', [BrandsController::class, 'update'])
-            ->middleware('permission:admin.brands.update')
-            ->name('admin.brands.update');
-        Route::delete('/brands/destroy/{id}', [BrandsController::class, 'destroy'])
-            ->middleware('permission:admin.brands.destroy')
-            ->name('admin.brands.destroy');
     });
 });

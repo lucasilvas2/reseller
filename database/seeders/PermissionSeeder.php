@@ -15,9 +15,9 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         // Criar roles
-        $roleAdmin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'dealer', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'reseller', 'guard_name' => 'web']);
 
         // Criar permissões
         $permissions = [
@@ -49,23 +49,6 @@ class PermissionSeeder extends Seeder
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
-        }
-
-        // Atribuir todas as permissões ao role admin
-        $roleAdmin->syncPermissions($permissions);
-
-        // Atribuir role admin ao usuário admin (se existir)
-        $adminUser = User::where('email', 'admin@admin.com')->first();
-        if ($adminUser) {
-            $adminUser->assignRole('admin');
-        }
-
-        // Atribuir role dealer aos outros usuários
-        $dealerUsers = User::whereNot('email', 'admin@admin.com')->get();
-        foreach ($dealerUsers as $user) {
-            if (!$user->hasRole('admin')) {
-                $user->assignRole('dealer');
-            }
         }
     }
 }
