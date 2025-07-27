@@ -15,7 +15,7 @@ const form = useForm({
 });
 
 const submitForm = () => {
-    form.post('/admin/dealerships/store', {
+    form.post('/admin/stores/store', {
         onSuccess: () => {
         },
         onError: (errors) => {
@@ -26,10 +26,10 @@ const submitForm = () => {
 </script>
 
 <template>
-    <AdminLayout title="Users">
+    <AdminLayout title="Stores">
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Create
+                Create Store
             </h2>
         </template>
 

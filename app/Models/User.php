@@ -17,7 +17,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $name
  * @property string $email
  * @property string $password
- * @property int|null $dealership_id
+ * @property int|null $store_id
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -42,7 +42,7 @@ class User extends Authenticatable
         'email',
         'password',
         'phone_number',
-        'dealership_id'
+        'store_id'
     ];
 
     /**
@@ -82,12 +82,12 @@ class User extends Authenticatable
     protected $with = ['roles'];
 
     /**
-     * Get the dealership that the user belongs to.
+     * Get the store that the user belongs to.
      * @return BelongsTo
      */
-    public function dealerships(): BelongsTo
+    public function store(): BelongsTo
     {
-        return $this->belongsTo(Dealership::class, 'dealership_id');
+        return $this->belongsTo(Store::class, 'store_id');
     }
 
 }

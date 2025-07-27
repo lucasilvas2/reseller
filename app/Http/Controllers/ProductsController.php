@@ -18,7 +18,7 @@ class ProductsController extends Controller
 
     public function index(Request $request): \Inertia\Response
     {
-        $query = $this->productsModel->where('dealership_id', Auth::user()->dealership_id)
+        $query = $this->productsModel->where('store_id', Auth::user()->store_id)
             ->with('brands');
 
         // Apply search filter
@@ -82,7 +82,7 @@ class ProductsController extends Controller
         });
 
         // Get brands for filter dropdown
-        $brands = Brands::where('dealership_id', Auth::user()->dealership_id)->get();
+        $brands = Brands::where('store_id', Auth::user()->store_id)->get();
 
         return inertia('App/Products/Index', [
             'data' => $transformedData,
@@ -102,7 +102,7 @@ class ProductsController extends Controller
 
     public function create(): \Inertia\Response
     {
-        $brands = Brands::where('dealership_id', Auth::user()->dealership_id)->get();
+        $brands = Brands::where('store_id', Auth::user()->store_id)->get();
         return inertia('App/Products/Create', compact('brands'));
     }
 
@@ -116,7 +116,7 @@ class ProductsController extends Controller
         ]);
 
         $request->merge([
-            'dealership_id' => Auth::user()->dealership_id,
+            'store_id' => Auth::user()->store_id,
         ]);
 
         $product = $this->productsModel->create($request->all());
@@ -132,7 +132,7 @@ class ProductsController extends Controller
     public function edit(int $id): \Inertia\Response
     {
         $product = $this->productsModel->findOrFail($id);
-        $brands = Brands::where('dealership_id', Auth::user()->dealership_id)->get();
+        $brands = Brands::where('store_id', Auth::user()->store_id)->get();
         return inertia('App/Products/Edit', compact('product', 'brands'));
     }
 
@@ -159,7 +159,7 @@ class ProductsController extends Controller
     public function destroy(int $id): \Illuminate\Http\RedirectResponse
     {
         $product = $this->productsModel
-            ->where('dealership_id', Auth::user()->dealership_id)
+            ->where('store_id', Auth::user()->store_id)
             ->findOrFail($id);
 
         $product->delete();

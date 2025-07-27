@@ -147,7 +147,7 @@ class StockMovementController extends Controller
      */
     private function getProductsForFilter(): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->products->where('dealership_id', Auth::user()->dealership_id)
+        return $this->products->where('store_id', Auth::user()->store_id)
             ->select('id', 'name')
             ->get();
     }
@@ -157,7 +157,7 @@ class StockMovementController extends Controller
      */
     private function getProductSkusForFilter(): \Illuminate\Support\Collection
     {
-        return $this->productsSku->where('dealership_id', Auth::user()->dealership_id)
+        return $this->productsSku->where('store_id', Auth::user()->store_id)
             ->with('products:id,name')
             ->select('id', 'product_id', 'sku')
             ->get()
@@ -173,7 +173,7 @@ class StockMovementController extends Controller
 
     public function create(): Response
     {
-        $products = $this->products->where('dealership_id', Auth::user()->dealership_id)->get();
+        $products = $this->products->where('store_id', Auth::user()->store_id)->get();
         return Inertia::render('App/Stocks/Movements/Create', compact('products'));
     }
 
@@ -184,7 +184,7 @@ class StockMovementController extends Controller
         $productSku = $this->productsSku->firstOrCreate([
             'product_id' => $request->product_id,
             'sku' => $request->sku,
-            'dealership_id' => Auth::user()->dealership_id,
+            'store_id' => Auth::user()->store_id,
         ], [
             'barcode' => $request->barcode,
             'cost_price' => $request->cost_price,
@@ -197,7 +197,7 @@ class StockMovementController extends Controller
             'quantity' => $request->quantity,
             'type' => $request->type,
             'user_id' => Auth::id(),
-            'dealership_id' => Auth::user()->dealership_id,
+            'store_id' => Auth::user()->store_id,
         ]);
 
         return redirect()->route('stocks.movements.index')
@@ -207,7 +207,7 @@ class StockMovementController extends Controller
     public function show($id): Response
     {
         $movement = $this->stockMovement->where('id', $id)
-            ->where('dealership_id', Auth::user()->dealership_id)
+            ->where('store_id', Auth::user()->store_id)
             ->with(['productSku.products', 'user'])
             ->firstOrFail();
 
@@ -217,11 +217,11 @@ class StockMovementController extends Controller
     public function edit($id): Response
     {
         $movement = $this->stockMovement->where('id', $id)
-            ->where('dealership_id', Auth::user()->dealership_id)
+            ->where('store_id', Auth::user()->store_id)
             ->with('productSku.products')
             ->firstOrFail();
 
-        $products = $this->products->where('dealership_id', Auth::user()->dealership_id)->get();
+        $products = $this->products->where('store_id', Auth::user()->store_id)->get();
 
         return Inertia::render('App/Stocks/Movements/Edit', compact('movement', 'products'));
     }
@@ -229,7 +229,7 @@ class StockMovementController extends Controller
     public function update($id, UpdateStockMovementRequest $request): RedirectResponse
     {
         $movement = $this->stockMovement->where('id', $id)
-            ->where('dealership_id', Auth::user()->dealership_id)
+            ->where('store_id', Auth::user()->store_id)
             ->with('productSku')
             ->firstOrFail();
 
@@ -246,7 +246,7 @@ class StockMovementController extends Controller
     public function destroy($id): RedirectResponse
     {
         $movement = $this->stockMovement->where('id', $id)
-            ->where('dealership_id', Auth::user()->dealership_id)
+            ->where('store_id', Auth::user()->store_id)
             ->firstOrFail();
 
         $movement->delete();
@@ -272,7 +272,7 @@ class StockMovementController extends Controller
     public function apiShow($id): StockMovementResource
     {
         $movement = $this->stockMovement->where('id', $id)
-            ->where('dealership_id', Auth::user()->dealership_id)
+            ->where('store_id', Auth::user()->store_id)
             ->with(['productSku.products', 'user'])
             ->firstOrFail();
 
@@ -288,7 +288,7 @@ class StockMovementController extends Controller
         $productSku = $this->productsSku->firstOrCreate([
             'product_id' => $request->product_id,
             'sku' => $request->sku,
-            'dealership_id' => Auth::user()->dealership_id,
+            'store_id' => Auth::user()->store_id,
         ], [
             'barcode' => $request->barcode,
             'cost_price' => $request->cost_price,
@@ -302,7 +302,7 @@ class StockMovementController extends Controller
             'type' => $request->type,
             'description' => $request->description,
             'user_id' => Auth::id(),
-            'dealership_id' => Auth::user()->dealership_id,
+            'store_id' => Auth::user()->store_id,
         ]);
 
         // Load relationships for response
@@ -317,7 +317,7 @@ class StockMovementController extends Controller
     public function apiUpdate(UpdateStockMovementRequest $request, $id): StockMovementResource
     {
         $movement = $this->stockMovement->where('id', $id)
-            ->where('dealership_id', Auth::user()->dealership_id)
+            ->where('store_id', Auth::user()->store_id)
             ->firstOrFail();
 
         $movement->update($request->validated());

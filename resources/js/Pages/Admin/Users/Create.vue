@@ -12,7 +12,7 @@ const form = useForm({
     email: '',
     phone_number: '',
     role: '',
-    dealership: '',
+    store: '',
     errors: {},
 });
 
@@ -91,14 +91,14 @@ const submitForm = () => {
                                 <InputError class="mt-2" :message="form.errors.role"/>
                             </div>
                             <div>
-                                <InputLabel for="delaership" value="Dealership"/>
+                                <InputLabel for="store" value="Store"/>
                                 <SelectInput
                                     class="w-full"
-                                    v-model="form.dealership"
-                                    :options="optionsDealership"
+                                    v-model="form.store"
+                                    :options="optionsStore"
                                     autofocus
                                 />
-                                <InputError class="mt-2" :message="form.errors.dealership"/>
+                                <InputError class="mt-2" :message="form.errors.store"/>
                             </div>
                         </div>
                         <div class="flex items-center justify-end mt-4">
@@ -124,7 +124,7 @@ export default {
             type: Array,
             required: true,
         },
-        dealerships:{
+        stores:{
             type: Array,
             required: true
         },
@@ -132,6 +132,7 @@ export default {
     data() {
         return {
             options: [],
+            optionsStore: [],
         };
     },
     methods: {
@@ -148,7 +149,7 @@ export default {
     },
     mounted() {
         this.options = this.transformValuesToOptions(this.roles);
-        this.optionsDealership = this.transformValuesToOptions(this.dealerships);
+        this.optionsStore = this.transformValuesToOptions(this.stores);
     },
 };
 </script>

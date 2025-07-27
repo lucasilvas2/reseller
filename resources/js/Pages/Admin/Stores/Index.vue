@@ -1,13 +1,19 @@
 <template>
-    <AppLayout title="Clients">
+    <AdminLayout title="Stores">
         <template #header>
             <div class="flex flex-row">
                 <div class="basis-1/2">
                     <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                        Dealers
+                        Stores
                     </h2>
                 </div>
+                <div class="basis-1/2 flex justify-end">
+                    <PrimaryButton type="link" :href="route('admin.stores.create')">
+                        Add
+                    </PrimaryButton>
+                </div>
             </div>
+
         </template>
 
         <div class="py-12">
@@ -22,7 +28,7 @@
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </AdminLayout>
 </template>
 
 <script>
@@ -30,41 +36,42 @@ import AdminLayout from "@/Layouts/AdminLayout.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import Table from "@/Components/Table.vue";
 import {router} from "@inertiajs/vue3";
-import AppLayout from "@/Layouts/AppLayout.vue";
 
 export default {
     components: {
-        AppLayout,
+        AdminLayout,
         PrimaryButton,
         Table,
     },
     props: {
-        dealerships: {
+        stores: {
             type: Array,
             required: true,
         },
     },
     data() {
         return {
-            headers: ['Id', 'Name', 'Phone', 'Created'],
+            headers: ['Id', 'Name', 'Email'],
             rows: [],
-            hasActions: false
+            hasActions: true
         };
     },
     methods: {
-        transformBrandsToRows(dealerships) {
-            return dealerships.map(dealer => ({
-                id: dealer.id,
-                name: dealer.name,
-                phone: dealer.user.phone_number,
-                created: dealer.created_at,
+        handleEdit(row) {
+            router.get(route('admin.stores.edit', {
+                id: row.id
+            }));
+        },
+        transformStoresToRows(stores) {
+            return stores.map(store => ({
+                id: store.id,
+                name: store.name,
+                email: store.email,
             }));
         },
     },
     mounted() {
-        debugger
-        console.log(this.dealerships);
-        this.rows = this.transformBrandsToRows(this.dealerships);
+        this.rows = this.transformStoresToRows(this.stores);
     },
 };
 </script>

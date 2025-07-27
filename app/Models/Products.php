@@ -16,7 +16,7 @@ class Products extends Model
         'brand_id',
         'description',
         'image_url',
-        'dealership_id'
+        'store_id'
     ];
 
     /**

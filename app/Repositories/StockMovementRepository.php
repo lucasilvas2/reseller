@@ -18,16 +18,16 @@ class StockMovementRepository
     }
 
     /**
-     * Get base query for stock movements with dealership filter
+     * Get base query for stock movements with store filter
      */
     public function getBaseQuery(): Builder
     {
-        return $this->stockMovement->where('dealership_id', Auth::user()->dealership_id)
+        return $this->stockMovement->where('store_id', Auth::user()->store_id)
             ->with(['productSku.products', 'user']);
     }
 
     /**
-     * Find stock movement by ID within dealership
+     * Find stock movement by ID within store
      */
     public function findById(int $id): ?StockMovement
     {
@@ -47,9 +47,9 @@ class StockMovementRepository
     }
 
     /**
-     * Find stock movement by ID for dealership or fail
+     * Find stock movement by ID for store or fail
      */
-    public function findByIdForDealership(int $id): ?StockMovement
+    public function findByIdForStore(int $id): ?StockMovement
     {
         return $this->getBaseQuery()
             ->where('id', $id)
@@ -175,7 +175,7 @@ class StockMovementRepository
      */
     public function create(array $data): StockMovement
     {
-        $data['dealership_id'] = Auth::user()->dealership_id;
+        $data['store_id'] = Auth::user()->store_id;
         $data['user_id'] = Auth::id();
 
         return $this->stockMovement->create($data);
@@ -263,7 +263,7 @@ class StockMovementRepository
     public function getTrendData(int $days = 30): Collection
     {
         return $this->stockMovement
-            ->where('dealership_id', Auth::user()->dealership_id)
+            ->where('store_id', Auth::user()->store_id)
             ->where('created_at', '>=', now()->subDays($days))
             ->selectRaw('DATE(created_at) as date, type, SUM(quantity) as total')
             ->groupBy('date', 'type')

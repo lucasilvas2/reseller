@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 
-class Dealership extends Model
+class Store extends Model
 {
     use HasFactory, Notifiable;
 
@@ -19,7 +19,7 @@ class Dealership extends Model
     ];
 
     /**
-     *  Get the users that belong to the dealership.
+     *  Get the users that belong to the store.
      * @return HasMany
      */
     public function users(): \Illuminate\Database\Eloquent\Relations\HasMany

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\InvitationClientAccountEmail;
 use App\Mail\InvitationCreateAccountEmail;
 use App\Models\Client;
-use App\Models\Dealership;
+use App\Models\Store;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,7 +25,7 @@ class ClientsController extends Controller
     public function index(Request $request): \Inertia\Response
     {
         $query = $this->clientModel
-            ->where('dealership_id', Auth::user()->dealership_id)
+            ->where('store_id', Auth::user()->store_id)
             ->with('user');
 
         // Apply search filter
@@ -120,7 +120,7 @@ class ClientsController extends Controller
         $sendFirtInvitation = false;
 
         $user = $this->userModel->where('email', $request->email)->first();
-        $dealership = Dealership::find(Auth::user()->dealership_id);
+        $store = Store::find(Auth::user()->store_id);
 
         if(empty($user)){
             $rawPassword = uniqid(mt_rand(10, 20), true);
@@ -129,20 +129,20 @@ class ClientsController extends Controller
                 'email' => $request->email,
                 'phone_number' => $request->phone,
                 'password' => bcrypt($rawPassword),
-                'dealership_id' => Auth::user()->dealership_id,
+                'store_id' => Auth::user()->store_id,
                 'deleted_at' => now(),
             ]);
 
             $user->assignRole('user');
 
 
-            $this->sendInvitationCreateCount($rawPassword, $user->email, $user->name, $dealership->name, route('login'));
+            $this->sendInvitationCreateCount($rawPassword, $user->email, $user->name, $store->name, route('login'));
             $sendFirtInvitation = true;
         }
 
         $this->clientModel->firstOrCreate(
             ['user_id' => $user->id],
-            ['dealership_id' => Auth::user()->dealership_id]
+            ['store_id' => Auth::user()->store_id]
         );
 
 
@@ -151,7 +151,7 @@ class ClientsController extends Controller
             $this->sendInvitationClientAccount(
                 $user->email,
                 $user->name,
-                $dealership->name,
+                $store->name,
                 route('login')
             );
         }
@@ -159,21 +159,21 @@ class ClientsController extends Controller
         return redirect()->route('clients.index');
     }
 
-    private function sendInvitationCreateCount(string $rawPassword, string $email,string $username, string $dealershipName, string $url): void
+    private function sendInvitationCreateCount(string $rawPassword, string $email,string $username, string $storeName, string $url): void
     {
         Mail::to($email)->send(new InvitationCreateAccountEmail(
             $username,
-            $dealershipName,
+            $storeName,
             $rawPassword,
             $url
         ));
     }
 
-    private function sendInvitationClientAccount(string $email, string $username, string $dealershipName, string $invitationUrl): void
+    private function sendInvitationClientAccount(string $email, string $username, string $storeName, string $invitationUrl): void
     {
         Mail::to($email)->send(new InvitationClientAccountEmail(
             $username,
-            $dealershipName,
+            $storeName,
             $invitationUrl
         ));
     }
@@ -181,7 +181,7 @@ class ClientsController extends Controller
     public function destroy(int $id)
     {
         $client = $this->clientModel
-            ->where('dealership_id', Auth::user()->dealership_id)
+            ->where('store_id', Auth::user()->store_id)
             ->find($id);
 
         if (!$client) {

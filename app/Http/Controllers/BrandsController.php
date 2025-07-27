@@ -18,7 +18,7 @@ class BrandsController extends Controller
 
     public function index(): \Inertia\Response
     {
-        $brands = $this->brandsModel->where('dealership_id', Auth::user()->dealership_id)->get();
+        $brands = $this->brandsModel->where('store_id', Auth::user()->store_id)->get();
         return Inertia::render('Admin/Brands/Index', compact('brands'));
     }
 
@@ -35,7 +35,7 @@ class BrandsController extends Controller
         ]);
 
         $request->merge([
-            'dealership_id' => Auth::user()->dealership_id,
+            'store_id' => Auth::user()->store_id,
         ]);
 
         $brand = $this->brandsModel->create($request->all());
@@ -50,7 +50,7 @@ class BrandsController extends Controller
 
     public function edit(int $id): \Inertia\Response
     {
-        $brand = $this->brandsModel->where('dealership_id', Auth::user()->dealership_id)->findOrFail($id);
+        $brand = $this->brandsModel->where('store_id', Auth::user()->store_id)->findOrFail($id);
         return Inertia::render('Admin/Brands/Edit', compact('brand'));
     }
 
@@ -61,7 +61,7 @@ class BrandsController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        $brand = $this->brandsModel->where('dealership_id', Auth::user()->dealership_id)->findOrFail($id);
+        $brand = $this->brandsModel->where('store_id', Auth::user()->store_id)->findOrFail($id);
         $brand->update($request->all());
 
         if ($request->hasFile('image')) {
@@ -74,7 +74,7 @@ class BrandsController extends Controller
 
     public function destroy(int $id): \Illuminate\Http\RedirectResponse
     {
-        $brand = $this->brandsModel->where('dealership_id', Auth::user()->dealership_id)->findOrFail($id);
+        $brand = $this->brandsModel->where('store_id', Auth::user()->store_id)->findOrFail($id);
         $brand->delete();
 
         return redirect()->route('admin.brands.index');

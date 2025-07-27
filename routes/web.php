@@ -4,10 +4,10 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BrandsController;
 use App\Http\Controllers\ClientsController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\DealershipsController;
+use App\Http\Controllers\StoresController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductsController;
-use App\Http\Controllers\PublicDealershipsController;
+use App\Http\Controllers\PublicStoresController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
@@ -68,7 +68,7 @@ Route::middleware([
     });
 
     Route::middleware(['role:user'])->group(function () {
-        Route::get('/dealers', [PublicDealershipsController::class, 'index'])->name('dealers.index');
+        Route::get('/stores', [PublicStoresController::class, 'index'])->name('stores.index');
     });
 });
 
@@ -99,22 +99,22 @@ Route::prefix('admin')->group(function () {
             ->middleware('permission:admin.users.update')
             ->name('admin.users.update');
 
-        // Dealerships routes
-        Route::get('/dealerships', [DealershipsController::class, 'index'])
-            ->middleware('permission:admin.dealerships.index')
-            ->name('admin.dealerships.index');
-        Route::get('/dealerships/create', [DealershipsController::class, 'create'])
-            ->middleware('permission:admin.dealerships.create')
-            ->name('admin.dealerships.create');
-        Route::post('/dealerships/store', [DealershipsController::class, 'store'])
-            ->middleware('permission:admin.dealerships.create')
-            ->name('admin.dealerships.store');
-        Route::get('/dealerships/edit/{id}', [DealershipsController::class, 'edit'])
-            ->middleware('permission:admin.dealerships.edit')
-            ->name('admin.dealerships.edit');
-        Route::post('/dealerships/update/{id}', [DealershipsController::class, 'update'])
-            ->middleware('permission:admin.dealerships.update')
-            ->name('admin.dealerships.update');
+        // Stores routes
+        Route::get('/stores', [StoresController::class, 'index'])
+            ->middleware('permission:admin.stores.index')
+            ->name('admin.stores.index');
+        Route::get('/stores/create', [StoresController::class, 'create'])
+            ->middleware('permission:admin.stores.create')
+            ->name('admin.stores.create');
+        Route::post('/stores/store', [StoresController::class, 'store'])
+            ->middleware('permission:admin.stores.create')
+            ->name('admin.stores.store');
+        Route::get('/stores/edit/{id}', [StoresController::class, 'edit'])
+            ->middleware('permission:admin.stores.edit')
+            ->name('admin.stores.edit');
+        Route::post('/stores/update/{id}', [StoresController::class, 'update'])
+            ->middleware('permission:admin.stores.update')
+            ->name('admin.stores.update');
 
         // Brands routes
         Route::get('/brands', [BrandsController::class, 'index'])

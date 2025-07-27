@@ -47,7 +47,7 @@
 
 <p>Hi, {{ $username }},</p>
 
-<p>You have been registered by <strong>{{ $dealershipName }}</strong>.</p>
+<p>You have been registered by <strong>{{ $storeName }}</strong>.</p>
 
 <p>Your temporary password for first access is:</p>
 

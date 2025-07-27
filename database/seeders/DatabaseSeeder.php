@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Dealership;
+use App\Models\Store;
 use App\Models\User;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::factory(10)->create();
-        Dealership::factory(10)->create();
+        Store::factory(10)->create();
 
         User::factory()->create([
             'name' => 'admin',
@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
 
         $dealer = User::where('name', 'dealer')->first();
         $dealer->update([
-            'dealership_id' => Dealership::first()->id,
+            'store_id' => Store::first()->id,
         ]);
 
         $this->call([

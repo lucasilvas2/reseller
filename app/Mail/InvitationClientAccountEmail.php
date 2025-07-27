@@ -13,21 +13,21 @@ class InvitationClientAccountEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public string $dealershipName;
+    public string $storeName;
     public string $invitationUrl;
     public string $username;
 
-    public function __construct(string $username, string $dealershipName, string $invitationUrl)
+    public function __construct(string $username, string $storeName, string $invitationUrl)
     {
         $this->username = $username;
-        $this->dealershipName = $dealershipName;
+        $this->storeName = $storeName;
         $this->invitationUrl = $invitationUrl;
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Client Invitation from ' . $this->dealershipName,
+            subject: 'Client Invitation from ' . $this->storeName,
         );
     }
 
@@ -37,7 +37,7 @@ class InvitationClientAccountEmail extends Mailable
             view: 'emails.invitation-client-account',
             with: [
                 'username' => $this->username,
-                'dealershipName' => $this->dealershipName,
+                'storeName' => $this->storeName,
                 'invitationUrl' => $this->invitationUrl,
             ]
         );

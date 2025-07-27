@@ -79,7 +79,7 @@ class InventoryController extends Controller
      */
     private function buildBaseQuery(array $filters): \Illuminate\Database\Eloquent\Builder
     {
-        $query = $this->productsSku->where('dealership_id', Auth::user()->dealership_id)
+        $query = $this->productsSku->where('store_id', Auth::user()->store_id)
             ->with(['products', 'stockMovements']);
 
         // Search filter
@@ -208,7 +208,7 @@ class InventoryController extends Controller
     public function apiShow($id): InventoryItemResource
     {
         $productSku = $this->productsSku->where('id', $id)
-            ->where('dealership_id', Auth::user()->dealership_id)
+            ->where('store_id', Auth::user()->store_id)
             ->with(['products', 'stockMovements'])
             ->firstOrFail();
 

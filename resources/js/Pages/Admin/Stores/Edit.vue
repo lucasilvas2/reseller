@@ -1,8 +1,8 @@
 <template>
-    <AdminLayout title="Dealership">
+    <AdminLayout title="Store">
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Edit Dealership
+                Edit Store
             </h2>
         </template>
 
@@ -83,7 +83,7 @@ export default {
         PrimaryButton,
     },
     props: {
-        dealership: {
+        store: {
             type: Object,
             required: true,
         },
@@ -91,16 +91,16 @@ export default {
     data() {
         return {
             form: useForm({
-                name: this.dealership.name,
-                email: this.dealership.email,
-                phone_number: this.dealership.phone_number,
+                name: this.store.name,
+                email: this.store.email,
+                phone_number: this.store.phone_number,
                 errors: {},
             }),
         };
     },
     methods: {
         submitForm() {
-            this.form.post(`/admin/dealerships/update/${this.dealership.id}`, {
+            this.form.post(`/admin/stores/update/${this.store.id}`, {
                 onSuccess: () => {
                     // Lógica para sucesso
                 },

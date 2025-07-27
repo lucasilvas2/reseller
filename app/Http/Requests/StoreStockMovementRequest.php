@@ -24,11 +24,11 @@ class StoreStockMovementRequest extends FormRequest
     {
         return [
             'product_id' => 'required|exists:products,id',
-            'sku' => 'nullable|string|max:255|unique:products_skus,sku,NULL,id,dealership_id,' . Auth::user()->dealership_id,
+            'sku' => 'nullable|string|max:255|unique:products_skus,sku,NULL,id,store_id,' . Auth::user()->store_id,
             'quantity' => 'required|integer|min:1',
             'cost_price' => 'required|numeric|min:0',
             'sale_price' => 'required|numeric|min:0|gte:cost_price',
-            'barcode' => 'nullable|string|max:255|unique:products_skus,barcode,NULL,id,dealership_id,' . Auth::user()->dealership_id,
+            'barcode' => 'nullable|string|max:255|unique:products_skus,barcode,NULL,id,store_id,' . Auth::user()->store_id,
             'type' => 'required|in:in,out',
             'description' => 'nullable|string|max:500',
         ];

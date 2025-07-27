@@ -1,4 +1,4 @@
-# Sistema de Gestão para Concessionárias
+# Sistema de Gestão para Lojas
 
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
@@ -12,15 +12,15 @@
 
 ## Sobre o Projeto
 
-Este é um sistema completo de gestão para concessionárias, desenvolvido para facilitar o controle de estoque, produtos, clientes e movimentações. O sistema oferece diferentes níveis de acesso para administradores, dealers (concessionários) e usuários finais.
+Este é um sistema completo de gestão para lojas, desenvolvido para facilitar o controle de estoque, produtos, clientes e movimentações. O sistema oferece diferentes níveis de acesso para administradores, lojistas e usuários finais.
 
 ### Funcionalidades Principais
 
 - **Gestão de Produtos**: Cadastro e controle de produtos com SKUs, preços e categorias
 - **Controle de Estoque**: Movimentações de entrada e saída com rastreamento completo
 - **Dashboard Analítico**: Gráficos e métricas de desempenho em tempo real
-- **Gestão de Clientes**: Sistema de convites e controle de acesso por concessionária
-- **Sistema Multi-tenant**: Isolamento de dados por concessionária
+- **Gestão de Clientes**: Sistema de convites e controle de acesso por loja
+- **Sistema Multi-tenant**: Isolamento de dados por loja
 - **Controle de Permissões**: Sistema robusto de roles e permissões
 - **Área Administrativa**: Painel completo para gerenciamento do sistema
 
@@ -54,17 +54,17 @@ Este é um sistema completo de gestão para concessionárias, desenvolvido para 
 ### Tipos de Usuário
 
 1. **Admin**: Acesso completo ao sistema
-   - Gerenciamento de usuários, concessionárias e marcas
+   - Gerenciamento de usuários, lojas e marcas
    - Controle total de permissões
    - Auditoria de ações administrativas
 
-2. **Dealer**: Gestores de concessionárias
-   - Gestão de produtos e estoque da concessionária
+2. **Dealer**: Gestores de lojas
+   - Gestão de produtos e estoque da loja
    - Controle de clientes e movimentações
-   - Dashboard com métricas da concessionária
+   - Dashboard com métricas da loja
 
 3. **User**: Usuários finais/clientes
-   - Visualização de concessionárias disponíveis
+   - Visualização de lojas disponíveis
    - Acesso limitado conforme permissões
 
 ## Arquitetura

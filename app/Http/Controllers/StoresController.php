@@ -2,31 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Dealership;
+use App\Models\Store;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class DealershipsController extends Controller
+class StoresController extends Controller
 {
-    protected Dealership $dealershipModel;
+    protected Store $storeModel;
 
-    public function __construct(Dealership $dealershipModel)
+    public function __construct(Store $storeModel)
     {
-        $this->dealershipModel = $dealershipModel;
+        $this->storeModel = $storeModel;
     }
 
     public function index(): \Inertia\Response
     {
-        $dealerships = $this->dealershipModel->all();
+        $stores = $this->storeModel->all();
 
-        return Inertia::render('Admin/Dealerships/Index', [
-            'dealerships' => $dealerships,
+        return Inertia::render('Admin/Stores/Index', [
+            'stores' => $stores,
         ]);
     }
 
     public function create(): \Inertia\Response
     {
-        return Inertia::render('Admin/Dealerships/Create');
+        return Inertia::render('Admin/Stores/Create');
     }
 
     public function store(Request $request): \Illuminate\Http\RedirectResponse
@@ -37,17 +37,17 @@ class DealershipsController extends Controller
             'phone_number' => 'required',
         ]);
 
-        $this->dealershipModel->create($request->all());
+        $this->storeModel->create($request->all());
 
-        return redirect()->route('admin.dealerships.index');
+        return redirect()->route('admin.stores.index');
     }
 
     public function edit(int $id)
     {
-        $dealership = $this->dealershipModel->findOrFail($id);
+        $store = $this->storeModel->findOrFail($id);
 
-        return Inertia::render('Admin/Dealerships/Edit', [
-            'dealership' => $dealership,
+        return Inertia::render('Admin/Stores/Edit', [
+            'store' => $store,
         ]);
     }
 
@@ -58,14 +58,14 @@ class DealershipsController extends Controller
             'email' => 'required',
         ]);
 
-        $user = $this->dealershipModel->find($id);
+        $store = $this->storeModel->find($id);
 
-        $user->update([
+        $store->update([
             'name' => $request->get('name'),
             'email' => $request->get('email'),
             'phone_number' => $request->get('phone_number'),
         ]);
 
-        return redirect()->route('admin.dealerships.index');
+        return redirect()->route('admin.stores.index');
     }
 }

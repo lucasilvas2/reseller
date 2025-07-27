@@ -20,7 +20,7 @@ defineProps({
 </script>
 
 <template>
-    <Head title="Dealer - Plataforma de Vendas" />
+    <Head title="Store Manager - Plataforma de Vendas" />
     <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
         <!-- Header -->
         <header class="relative z-10 px-6 py-6">
@@ -32,7 +32,7 @@ defineProps({
                             <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
                         </svg>
                     </div>
-                    <span class="text-xl font-bold text-slate-900 dark:text-white">Dealer</span>
+                    <span class="text-xl font-bold text-slate-900 dark:text-white">Store Manager</span>
                 </div>
 
                 <!-- Navigation -->
@@ -237,7 +237,7 @@ defineProps({
                                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
                             </svg>
                         </div>
-                        <span class="font-semibold text-slate-900 dark:text-white">Dealer</span>
+                        <span class="font-semibold text-slate-900 dark:text-white">Store Manager</span>
                     </div>
                     <p class="text-sm text-slate-600 dark:text-slate-400">
                         Construído com Laravel v{{ laravelVersion }} (PHP v{{ phpVersion }})

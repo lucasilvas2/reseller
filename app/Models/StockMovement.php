@@ -15,7 +15,7 @@ class StockMovement extends Model
         'quantity',
         'type',
         'user_id',
-        'dealership_id',
+        'store_id',
         'description',
         'order_item_id',
         'sale_id',

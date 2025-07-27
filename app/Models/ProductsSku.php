@@ -16,7 +16,7 @@ class ProductsSku extends Model
         'barcode',
         'cost_price',
         'sale_price',
-        'dealership_id',
+        'store_id',
     ];
 
     public function products()

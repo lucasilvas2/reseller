@@ -26,15 +26,15 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user->hasRole('dealer') || !$user->dealership_id) {
+        if (!$user->hasRole('dealer') || !$user->store_id) {
             return $this->buildGuestDashboard();
         }
 
-        $dealershipId = $user->dealership_id;
-        $metrics = $this->calculateDashboardMetrics($dealershipId);
-        $recentMovements = $this->getRecentMovements($dealershipId);
-        $trendData = $this->getTrendData($dealershipId);
-        $inventory = $this->getInventoryData($dealershipId);
+        $storeId = $user->store_id;
+        $metrics = $this->calculateDashboardMetrics($storeId);
+        $recentMovements = $this->getRecentMovements($storeId);
+        $trendData = $this->getTrendData($storeId);
+        $inventory = $this->getInventoryData($storeId);
         $stockDistribution = $this->getStockDistribution($inventory);
         $topProducts = $this->getTopProducts($inventory);
 
@@ -70,12 +70,12 @@ class DashboardController extends Controller
     /**
      * Calculate main dashboard metrics
      */
-    private function calculateDashboardMetrics(int $dealershipId): array
+    private function calculateDashboardMetrics(int $storeId): array
     {
-        $totalProducts = $this->products->where('dealership_id', $dealershipId)->count();
-        $totalMovements = $this->stockMovement->where('dealership_id', $dealershipId)->count();
+        $totalProducts = $this->products->where('store_id', $storeId)->count();
+        $totalMovements = $this->stockMovement->where('store_id', $storeId)->count();
 
-        $inventory = $this->getInventoryData($dealershipId);
+        $inventory = $this->getInventoryData($storeId);
         $totalStock = $inventory->sum('current_stock');
 
         $lowStockProducts = $inventory->filter(function ($item) {
@@ -102,9 +102,9 @@ class DashboardController extends Controller
     /**
      * Get recent stock movements
      */
-    private function getRecentMovements(int $dealershipId): \Illuminate\Support\Collection
+    private function getRecentMovements(int $storeId): \Illuminate\Support\Collection
     {
-        return $this->stockMovement->where('dealership_id', $dealershipId)
+        return $this->stockMovement->where('store_id', $storeId)
             ->with(['productSku.products', 'user'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
@@ -123,9 +123,9 @@ class DashboardController extends Controller
     /**
      * Get trend data for the last 30 days
      */
-    private function getTrendData(int $dealershipId): \Illuminate\Support\Collection
+    private function getTrendData(int $storeId): \Illuminate\Support\Collection
     {
-        return $this->stockMovement->where('dealership_id', $dealershipId)
+        return $this->stockMovement->where('store_id', $storeId)
             ->where('created_at', '>=', now()->subDays(30))
             ->selectRaw('DATE(created_at) as date, type, SUM(quantity) as total')
             ->groupBy('date', 'type')
@@ -147,9 +147,9 @@ class DashboardController extends Controller
     /**
      * Get inventory data with stock calculations
      */
-    private function getInventoryData(int $dealershipId): \Illuminate\Support\Collection
+    private function getInventoryData(int $storeId): \Illuminate\Support\Collection
     {
-        return $this->productsSku->where('dealership_id', $dealershipId)
+        return $this->productsSku->where('store_id', $storeId)
             ->with(['products', 'stockMovements'])
             ->get()
             ->map(function ($productSku) {

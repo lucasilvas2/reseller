@@ -36,7 +36,7 @@
         .button-container {
             text-align: center;
         }
-        .dealer-info {
+        .store-info {
             background-color: #f8f9fa;
             border-left: 4px solid #007bff;
             padding: 12px;
@@ -53,12 +53,12 @@
 
 <p>You have been invited to join as a client by:</p>
 
-<div class="dealer-info">
-    <strong>{{ $dealershipName }}</strong>
+<div class="store-info">
+    <strong>{{ $storeName }}</strong>
 </div>
 
 <div class="panel">
-    <p>By accepting this invitation, you'll have access to exclusive services and offers from this dealer.</p>
+    <p>By accepting this invitation, you'll have access to exclusive services and offers from this store.</p>
 </div>
 
 <p>Click the button below to accept the invitation and create your account:</p>

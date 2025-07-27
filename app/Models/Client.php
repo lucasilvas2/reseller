@@ -12,7 +12,7 @@ class Client extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'dealership_id', 'user_id',
+        'store_id', 'user_id',
     ];
 
     protected $casts = [
@@ -25,8 +25,8 @@ class Client extends Model
         return $this->belongsTo(User::class);
     }
 
-    // relationships dealerships
-    public function dealership(){
-        return $this->belongsTo(Dealership::class);
+    // relationships store
+    public function store(){
+        return $this->belongsTo(Store::class);
     }
 }

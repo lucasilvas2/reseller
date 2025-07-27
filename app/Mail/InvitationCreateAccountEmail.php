@@ -13,15 +13,15 @@ class InvitationCreateAccountEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public string $dealershipName;
+    public string $storeName;
     public string $rawPassword;
     public string $loginUrl;
     public string $username;
 
-    public function __construct(string $username, string $dealershipName, string $rawPassword, string $loginUrl)
+    public function __construct(string $username, string $storeName, string $rawPassword, string $loginUrl)
     {
         $this->username = $username;
-        $this->dealershipName = $dealershipName;
+        $this->storeName = $storeName;
         $this->rawPassword = $rawPassword;
         $this->loginUrl = $loginUrl;
     }
@@ -39,7 +39,7 @@ class InvitationCreateAccountEmail extends Mailable
             markdown: 'emails.invitation-create-account',
             with: [
                 'username' => $this->username,
-                'dealershipName' => $this->dealershipName,
+                'storeName' => $this->storeName,
                 'rawPassword' => $this->rawPassword,
                 'loginUrl' => $this->loginUrl,
             ]

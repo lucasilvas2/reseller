@@ -159,8 +159,8 @@ const handleMovementAction = ({ action, row }) => {
                             </div>
 
                             <div class="mt-6 text-gray-500">
-                                <p>This is your dashboard. Since you're not assigned to a dealership, you won't see stock management features.</p>
-                                <p class="mt-2">Please contact an administrator to be assigned to a dealership to access stock management.</p>
+                                <p>This is your dashboard. Since you're not assigned to a store, you won't see stock management features.</p>
+                                <p class="mt-2">Please contact an administrator to be assigned to a store to access stock management.</p>
                             </div>
                         </div>
 

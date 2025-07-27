@@ -22,7 +22,7 @@ class StockMovementResource extends JsonResource
             'type_label' => $this->getTypeLabel(),
             'description' => $this->description,
             'user_id' => $this->user_id,
-            'dealership_id' => $this->dealership_id,
+            'store_id' => $this->store_id,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 

@@ -27,7 +27,7 @@ class InventoryRepository
      */
     public function getBaseQuery(): Builder
     {
-        return $this->productsSku->where('dealership_id', Auth::user()->dealership_id)
+        return $this->productsSku->where('store_id', Auth::user()->store_id)
             ->with(['products', 'stockMovements']);
     }
 

@@ -21,7 +21,7 @@ class InventoryItemResource extends JsonResource
             'barcode' => $this->barcode,
             'cost_price' => $this->cost_price,
             'sale_price' => $this->sale_price,
-            'dealership_id' => $this->dealership_id,
+            'store_id' => $this->store_id,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
