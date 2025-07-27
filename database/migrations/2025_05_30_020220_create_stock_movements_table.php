@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('quantity');
             $table->enum('type', ['in', 'out']);
             $table->text('description')->nullable();
-            $table->foreignId('dealership_id')->constrained('dealerships');
+            $table->foreignId('store_id')->constrained('stores');
             $table->foreignId('sale_id')->nullable()->constrained('sales');
             $table->foreignId('order_item_id')->nullable()->constrained('order_items');
             $table->timestamps();

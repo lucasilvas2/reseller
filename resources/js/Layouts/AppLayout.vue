@@ -1,6 +1,6 @@
 <script setup>
 import {ref} from 'vue';
-import {Head, Link, router} from '@inertiajs/vue3';
+import {Head, Link, router, usePage} from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Banner from '@/Components/Banner.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -13,6 +13,25 @@ defineProps({
 });
 
 const showingNavigationDropdown = ref(false);
+const page = usePage();
+
+const hasRole = (role) => {
+    const user = page.props.auth.user;
+    if (!user || !user.roles) return false;
+
+    // If roles is array of strings
+    if (Array.isArray(user.roles) && typeof user.roles[0] === 'string') {
+        return user.roles.includes(role);
+    }
+
+    // If roles is array of objects with name property
+    if (Array.isArray(user.roles) && typeof user.roles[0] === 'object') {
+        return user.roles.some(r => r.name === role);
+    }
+
+    return false;
+};
+
 
 const switchToTeam = (team) => {
     router.put(route('current-team.update'), {
@@ -53,49 +72,56 @@ const logout = () => {
                                 </NavLink>
                             </div>
 
-                            <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink :href="route('products.index')" :active="route().current('products.index')">
-                                    Products
-                                </NavLink>
-                            </div>
+                            <template v-if="hasRole('dealer')">
+                                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                    <NavLink :href="route('clients.index')" :active="route().current('clients.index')">
+                                        Clients
+                                    </NavLink>
+                                </div>
 
-                            <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <Dropdown class="dropdown-stock">
-                                    <template #trigger>
-                                        <button
-                                            :class="[
-                                                'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none',
-                                                route().current('stock.*')
-                                                    ? 'border-indigo-400 text-gray-900 focus:border-indigo-700'
-                                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:text-gray-700 focus:border-gray-300'
-                                            ]"
-                                        >
-                                            Stock
-                                            <svg class="ms-2 -me-0.5 size-4" xmlns="http://www.w3.org/2000/svg"
-                                                 fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                                 stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                      d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"/>
-                                            </svg>
-                                        </button>
-                                    </template>
-                                    <template #content>
-                                        <div class="w-48">
-                                            <DropdownLink :href="route('stock.index')">
-                                                Dashboard
-                                            </DropdownLink>
+                                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                    <NavLink :href="route('products.index')" :active="route().current('products.index')">
+                                        Products
+                                    </NavLink>
+                                </div>
 
-                                            <Dropdown :href="route('stock.products')">
-                                                Products
-                                            </Dropdown>
+                                <!-- Stock Management Dropdown -->
+                                <div class="hidden sm:flex sm:items-center sm:ms-6">
+                                    <div class="ms-3 relative">
+                                        <Dropdown align="right" width="60">
+                                            <template #trigger>
+                                                <span class="inline-flex rounded-md">
+                                                    <button type="button"
+                                                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none focus:bg-gray-50 active:bg-gray-50 transition ease-in-out duration-150"
+                                                            :class="{ 'text-gray-900 bg-gray-100': route().current('stocks.*') }">
+                                                        Stock Management
+                                                        <svg class="ms-2 -me-0.5 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+                                                        </svg>
+                                                    </button>
+                                                </span>
+                                            </template>
 
-                                            <Dropdown :href="route('stock.movements')">
-                                                Movements
-                                            </Dropdown>
-                                        </div>
-                                    </template>
-                                </Dropdown>
-                            </div>
+                                            <template #content>
+                                                <DropdownLink :href="route('stocks.movements.index')">
+                                                    Movements
+                                                </DropdownLink>
+                                                <DropdownLink :href="route('stocks.inventory.index')">
+                                                    Inventory
+                                                </DropdownLink>
+                                            </template>
+                                        </Dropdown>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template v-if="hasRole('user')">
+                                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                    <NavLink :href="route('dealers.index')" :active="route().current('dealers.index')">
+                                        Dealers
+                                    </NavLink>
+                                </div>
+                            </template>
                         </div>
 
                         <div class="hidden sm:flex sm:items-center sm:ms-6">
@@ -262,6 +288,24 @@ const logout = () => {
                         <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
                             Dashboard
                         </ResponsiveNavLink>
+
+                        <!-- Stock Management Links for Mobile -->
+                        <div class="border-t border-gray-200 pt-2">
+                            <div class="px-4 py-2">
+                                <div class="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                    Stock Management
+                                </div>
+                            </div>
+                            <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
+                                Dashboard
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('stocks.movements.index')" :active="route().current('stocks.movements.*')">
+                                Movements
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('stocks.inventory.index')" :active="route().current('stocks.inventory.*')">
+                                Inventory
+                            </ResponsiveNavLink>
+                        </div>
                     </div>
 
                     <!-- Responsive Settings Options -->

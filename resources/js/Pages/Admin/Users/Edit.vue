@@ -61,14 +61,14 @@
                                 <InputError class="mt-2" :message="form.errors.role"/>
                             </div>
                             <div>
-                                <InputLabel for="dealership" value="Dealership"/>
+                                <InputLabel for="store" value="Store"/>
                                 <SelectInput
                                     class="w-full"
-                                    v-model="form.dealership"
-                                    :options="optionsDealership"
+                                    v-model="form.store"
+                                    :options="optionsStore"
                                     autofocus
                                 />
-                                <InputError class="mt-2" :message="form.errors.dealership"/>
+                                <InputError class="mt-2" :message="form.errors.store"/>
                             </div>
                         </div>
                         <div class="flex items-center justify-end mt-4">
@@ -111,7 +111,7 @@ export default {
             type: Object,
             required: true,
         },
-        dealerships:{
+        stores:{
             type: Array,
             required: true
         },
@@ -123,11 +123,11 @@ export default {
                 email: this.user.email,
                 phone_number: this.user.phone_number,
                 role: this.user.role.id,
-                dealership: this.user.dealership_id,
+                store: this.user.store_id,
                 errors: {},
             }),
             options: this.transformValuesToOptions(this.roles),
-            optionsDealership: this.transformValuesToOptions(this.dealerships),
+            optionsStore: this.transformValuesToOptions(this.stores),
         };
     },
     methods: {

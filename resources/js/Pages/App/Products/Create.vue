@@ -7,6 +7,7 @@ import {useForm} from "@inertiajs/vue3";
 import SelectInput from "@/Components/SelectInput.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
+import ImageInput from "@/Components/ImageInput.vue";
 
 const form = useForm({
     name: '',
@@ -56,7 +57,7 @@ const submitForm = () => {
                             </div>
                             <div>
                                 <InputLabel for="image" value="Image"/>
-                                <TextInput
+                                <ImageInput
                                     id="image"
                                     v-model="form.image"
                                     type="text"

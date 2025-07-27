@@ -12,6 +12,16 @@ use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property string $password
+ * @property int|null $store_id
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ */
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
@@ -31,7 +41,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'dealership_id'
+        'phone_number',
+        'store_id'
     ];
 
     /**
@@ -68,13 +79,15 @@ class User extends Authenticatable
         ];
     }
 
+    protected $with = ['roles'];
+
     /**
-     * Get the dealership that the user belongs to.
+     * Get the store that the user belongs to.
      * @return BelongsTo
      */
-    public function dealerships(): BelongsTo
+    public function store(): BelongsTo
     {
-        return $this->belongsTo(Dealership::class);
+        return $this->belongsTo(Store::class, 'store_id');
     }
 
 }

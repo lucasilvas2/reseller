@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
             $table->foreignId('client_id')->constrained('clients');
-            $table->foreignId('dealership_id')->constrained('dealerships');
+            $table->foreignId('store_id')->constrained('stores');
             $table->enum('status', ['pending', 'paid', 'canceled']);
             $table->decimal('total_amount', 10, 2);
             $table->timestamps();

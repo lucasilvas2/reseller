@@ -27,7 +27,7 @@
                             </div>
                             <div>
                                 <InputLabel for="image" value="Image"/>
-                                <TextInput
+                                <ImageInput
                                     id="image"
                                     v-model="form.image"
                                     type="text"
@@ -84,9 +84,11 @@ import InputLabel from "@/Components/InputLabel.vue";
 import { useForm } from "@inertiajs/vue3";
 import SelectInput from "@/Components/SelectInput.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
+import ImageInput from "@/Components/ImageInput.vue";
 
 export default {
     components: {
+        ImageInput,
         AppLayout,
         TextInput,
         InputError,
