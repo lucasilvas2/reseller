@@ -167,4 +167,50 @@ class ProductsController extends Controller
         return redirect()->route('products.index')
             ->with('success', 'Product deleted successfully!');
     }
+
+    /**
+     * API endpoint for product search (used by ProductSelector component)
+     */
+    public function apiSearch(Request $request)
+    {
+        $query = $request->get('q', '');
+
+        if (strlen($query) < 2) {
+            return response()->json(['data' => []]);
+        }
+
+        $products = Products::where('store_id', Auth::user()->store_id)
+            ->with(['productSkus' => function($query) {
+                $query->where('store_id', Auth::user()->store_id);
+            }])
+            ->where(function($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('description', 'like', "%{$query}%");
+            })
+            ->limit(10)
+            ->get()
+            ->flatMap(function ($product) {
+                return $product->productSkus->map(function ($sku) use ($product) {
+                    return [
+                        'id' => $sku->id,
+                        'name' => $product->name,
+                        'sku' => $sku->sku,
+                        'barcode' => $sku->barcode,
+                        'price' => $sku->sale_price,
+                        'stock_quantity' => $sku->getCurrentStock(),
+                        'product_id' => $product->id
+                    ];
+                });
+            });
+
+        return response()->json(['data' => $products]);
+    }
+
+    /**
+     * AJAX endpoint for product search (internal use by components)
+     */
+    public function ajaxSearch(Request $request)
+    {
+        return $this->apiSearch($request);
+    }
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Products extends Model
 {
@@ -33,5 +34,29 @@ class Products extends Model
     public function brands(): BelongsTo
     {
         return $this->brand();
+    }
+
+    /**
+     * Get the product SKUs for the product.
+     */
+    public function productSkus(): HasMany
+    {
+        return $this->hasMany(ProductsSku::class, 'product_id');
+    }
+
+    /**
+     * Alias for productSkus relationship
+     */
+    public function skus(): HasMany
+    {
+        return $this->productSkus();
+    }
+
+    /**
+     * Get the store that owns the product.
+     */
+    public function store(): BelongsTo
+    {
+        return $this->belongsTo(Store::class);
     }
 }

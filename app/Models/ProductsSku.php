@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProductsSku extends Model
 {
@@ -19,13 +21,90 @@ class ProductsSku extends Model
         'store_id',
     ];
 
-    public function products()
+    protected $casts = [
+        'cost_price' => 'decimal:2',
+        'sale_price' => 'decimal:2',
+    ];
+
+    public function products(): BelongsTo
     {
         return $this->belongsTo(Products::class, 'product_id');
     }
 
-    public function stockMovements()
+    /**
+     * Alias for products relationship (singular)
+     */
+    public function product(): BelongsTo
+    {
+        return $this->products();
+    }
+
+    public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class, 'product_sku_id');
+    }
+
+    public function orderItems(): HasMany
+    {
+        return $this->hasMany(OrderItem::class, 'product_sku_id');
+    }
+
+    public function store(): BelongsTo
+    {
+        return $this->belongsTo(Store::class);
+    }
+
+    // Métodos de cálculo de estoque
+    public function getCurrentStock(): int
+    {
+        $totalIn = $this->stockMovements()->where('type', 'in')->sum('quantity');
+        $totalOut = $this->stockMovements()->where('type', 'out')->sum('quantity');
+        return $totalIn - $totalOut;
+    }
+
+    public function getStockValue(): float
+    {
+        return $this->getCurrentStock() * $this->cost_price;
+    }
+
+    public function getFormattedCostPriceAttribute(): string
+    {
+        return 'R$ ' . number_format((float)$this->cost_price, 2, ',', '.');
+    }
+
+    public function getFormattedSalePriceAttribute(): string
+    {
+        return 'R$ ' . number_format((float)$this->sale_price, 2, ',', '.');
+    }
+
+    public function getMarginAttribute(): float
+    {
+        if ($this->cost_price > 0) {
+            return (($this->sale_price - $this->cost_price) / $this->cost_price) * 100;
+        }
+        return 0;
+    }
+
+    // Scopes
+    public function scopeByStore($query, $storeId)
+    {
+        return $query->where('store_id', $storeId);
+    }
+
+    public function scopeInStock($query)
+    {
+        return $query->whereHas('stockMovements', function($q) {
+            $q->selectRaw('SUM(CASE WHEN type = "in" THEN quantity ELSE -quantity END) as stock')
+              ->havingRaw('stock > 0');
+        });
+    }
+
+    public function scopeLowStock($query, $threshold = 10)
+    {
+        return $query->whereHas('stockMovements', function($q) use ($threshold) {
+            $q->selectRaw('SUM(CASE WHEN type = "in" THEN quantity ELSE -quantity END) as stock')
+              ->havingRaw('stock <= ?', [$threshold])
+              ->havingRaw('stock > 0');
+        });
     }
 }

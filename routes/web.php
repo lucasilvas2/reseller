@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BrandsController;
 use App\Http\Controllers\ClientsController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\StoresController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductsController;
@@ -30,7 +31,7 @@ Route::middleware([
 ])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::middleware(['role:dealer'])->group(function () {
+    Route::middleware(['role:reseller'])->group(function () {
         Route::get('/products', [ProductsController::class, 'index'])->name('products.index');
         Route::get('/products/create', [ProductsController::class, 'create'])->name('products.create');
         Route::post('/products/store', [ProductsController::class, 'store'])->name('products.store');
@@ -65,6 +66,30 @@ Route::middleware([
         Route::post('/clients/store', [ClientsController::class, 'store'])->name('clients.store');
         Route::delete('/clients/destroy/{id}', [ClientsController::class, 'destroy'])->name('clients.destroy');
         Route::get('/clients/show/{id}', [ClientsController::class, 'show'])->name('clients.show');
+
+        //sales
+        Route::resource('sales', SaleController::class, [
+            'names' => [
+                'index' => 'sales.index',
+                'create' => 'sales.create',
+                'store' => 'sales.store',
+                'show' => 'sales.show',
+                'edit' => 'sales.edit',
+                'update' => 'sales.update',
+                'destroy' => 'sales.destroy'
+            ]
+        ]);
+
+        // Rota adicional para reprocessar vendas
+        Route::patch('/sales/{sale}/retry', [SaleController::class, 'retry'])->name('sales.retry');
+
+        // Internal AJAX routes for sales components (no external API needed)
+        Route::prefix('ajax')->name('ajax.')->group(function () {
+            Route::get('/products/search', [ProductsController::class, 'ajaxSearch'])->name('products.search');
+            Route::get('/clients/search', [ClientsController::class, 'ajaxSearch'])->name('clients.search');
+            Route::post('/clients/quick-create', [ClientsController::class, 'ajaxStore'])->name('clients.store');
+            Route::get('/sales/{sale}/status', [SaleController::class, 'ajaxStatus'])->name('sales.status');
+        });
     });
 
     Route::middleware(['role:user'])->group(function () {

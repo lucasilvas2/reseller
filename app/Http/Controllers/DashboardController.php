@@ -25,9 +25,12 @@ class DashboardController extends Controller
     public function index(): Response
     {
         $user = Auth::user();
-
-        if (!$user->hasRole('dealer') || !$user->store_id) {
+        if (!$user->hasRole('reseller')) {
             return $this->buildGuestDashboard();
+        }
+
+        if (!$user->store_id) {
+            return $this->buildResellerWithoutStoreDashboard();
         }
 
         $storeId = $user->store_id;
@@ -43,7 +46,7 @@ class DashboardController extends Controller
             'trendData' => $trendData,
             'stockDistribution' => $stockDistribution,
             'topProducts' => $topProducts,
-            'isDealer' => true,
+            'isReseller' => true,
         ]));
     }
 
@@ -63,7 +66,28 @@ class DashboardController extends Controller
             'topProducts' => [],
             'currentStockLevel' => 0,
             'maxStockCapacity' => 1000,
-            'isDealer' => false,
+            'isReseller' => false,
+        ]);
+    }
+
+    /**
+     * Build dashboard for reseller users without store assigned
+     */
+    private function buildResellerWithoutStoreDashboard(): Response
+    {
+        return Inertia::render('Dashboard', [
+            'totalProducts' => 0,
+            'lowStockCount' => 0,
+            'outOfStockCount' => 0,
+            'totalMovements' => 0,
+            'recentMovements' => [],
+            'trendData' => [],
+            'stockDistribution' => [],
+            'topProducts' => [],
+            'currentStockLevel' => 0,
+            'maxStockCapacity' => 1000,
+            'isReseller' => true,
+            'needsStoreAssignment' => true,
         ]);
     }
 

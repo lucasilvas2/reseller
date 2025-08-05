@@ -199,5 +199,97 @@ class ClientsController extends Controller
         return inertia('App/Clients/View', compact('client'));
     }
 
+    /**
+     * API endpoint for client search (used by ClientSelector component)
+     */
+    public function apiSearch(Request $request)
+    {
+        $query = $request->get('q', '');
+
+        if (strlen($query) < 2) {
+            return response()->json(['data' => []]);
+        }
+
+        $clients = Client::where('store_id', Auth::user()->store_id)
+            ->with('user')
+            ->whereHas('user', function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('email', 'like', "%{$query}%")
+                  ->orWhere('phone_number', 'like', "%{$query}%");
+            })
+            ->limit(10)
+            ->get()
+            ->map(function ($client) {
+                return [
+                    'id' => $client->id,
+                    'name' => $client->user->name,
+                    'email' => $client->user->email,
+                    'phone' => $client->user->phone_number
+                ];
+            });
+
+        return response()->json(['data' => $clients]);
+    }
+
+    /**
+     * API endpoint for quick client creation (used by ClientSelector component)
+     */
+    public function apiStore(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'nullable|string|max:20'
+        ]);
+
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone_number' => $request->phone,
+                'password' => bcrypt('password'), // Default password
+                'store_id' => Auth::user()->store_id
+            ]);
+
+            $client = Client::create([
+                'user_id' => $user->id,
+                'store_id' => Auth::user()->store_id
+            ]);
+
+            $clientData = [
+                'id' => $client->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone_number
+            ];
+
+            return response()->json([
+                'data' => $clientData,
+                'message' => 'Cliente criado com sucesso!'
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Erro ao criar cliente',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * AJAX endpoint for client search (internal use by components)
+     */
+    public function ajaxSearch(Request $request)
+    {
+        return $this->apiSearch($request);
+    }
+
+    /**
+     * AJAX endpoint for quick client creation (internal use by components)
+     */
+    public function ajaxStore(Request $request)
+    {
+        return $this->apiStore($request);
+    }
 }
 

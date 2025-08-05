@@ -56,11 +56,19 @@ return [
             'driver' => 'sqs',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'prefix' => env('SQS_PREFIX', 'https://sqs.us-east-1.amazonaws.com/your-account-id'),
+            'prefix' => env('SQS_PREFIX', 'http://localhost:4566/000000000000'),
             'queue' => env('SQS_QUEUE', 'default'),
             'suffix' => env('SQS_SUFFIX'),
             'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
             'after_commit' => false,
+            // Configurações otimizadas para SQS
+            'visibility_timeout_seconds' => env('SQS_VISIBILITY_TIMEOUT', 300),
+            'wait_time_seconds' => env('SQS_WAIT_TIME', 20),
+            'message_retention_period' => env('SQS_MESSAGE_RETENTION', 1209600), // 14 dias
+            'receive_message_wait_time_seconds' => env('SQS_RECEIVE_WAIT_TIME', 20),
+            // LocalStack specific
+            'endpoint' => env('AWS_ENDPOINT'), // Para LocalStack
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', true),
         ],
 
         'redis' => [
