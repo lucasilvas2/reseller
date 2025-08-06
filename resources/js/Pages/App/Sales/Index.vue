@@ -93,7 +93,11 @@
                         </template>
 
                         <template #cell-status="{ row }">
-                            <span class="text-gray-600">{{ row.status || 'N/A' }}</span>
+                            <StatusBadge
+                                :status="row.status || 'pending'"
+                                type="sale"
+                                :show-pulse="row.status === 'processing'"
+                            />
                         </template>
 
                         <template #cell-created_at_formatted="{ row }">
@@ -111,6 +115,7 @@
 <script>
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import ServerPaginatedTable from "@/Components/ServerPaginatedTable.vue";
+import StatusBadge from "@/Components/UI/StatusBadge.vue";
 import { router } from "@inertiajs/vue3";
 import AppLayout from "@/Layouts/AppLayout.vue";
 
@@ -119,6 +124,7 @@ export default {
         AppLayout,
         PrimaryButton,
         ServerPaginatedTable,
+        StatusBadge,
     },
     props: {
         data: {

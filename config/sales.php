@@ -26,6 +26,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | High Demand Configuration
+    |--------------------------------------------------------------------------
+    */
+    'high_demand' => [
+        'lock_timeout_seconds' => env('SALES_LOCK_TIMEOUT', 5), // 5 segundos max por lock
+        'batch_processing_enabled' => env('SALES_BATCH_PROCESSING', true),
+        'circuit_breaker' => [
+            'enabled' => env('SALES_CIRCUIT_BREAKER', true),
+            'failure_threshold' => env('SALES_FAILURE_THRESHOLD', 5),
+            'recovery_time' => env('SALES_RECOVERY_TIME', 300), // 5 minutos
+        ],
+        'cache' => [
+            'enabled' => env('SALES_CACHE_ENABLED', false),
+            'ttl' => env('SALES_CACHE_TTL', 30), // 30 segundos
+            'prefix' => 'stock:',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Auto-Start Workers Configuration
     |--------------------------------------------------------------------------
     */

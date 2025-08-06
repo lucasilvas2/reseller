@@ -34,10 +34,11 @@
                                 </p>
                             </div>
                             <div class="flex items-center space-x-4">
-                                <span :class="getStatusClass(sale.status)"
-                                      class="px-3 py-1 rounded-full text-sm font-medium">
-                                    {{ sale.status_label || sale.status }}
-                                </span>
+                                <StatusBadge
+                                    :status="sale.status"
+                                    type="sale"
+                                    :show-pulse="sale.status === 'processing'"
+                                />
                                 <span class="text-2xl font-bold text-green-600">
                                     R$ {{ formatPrice(sale.total_amount) }}
                                 </span>
@@ -117,10 +118,11 @@
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-500">Status:</span>
-                                        <span :class="getStatusClass(sale.status)"
-                                              class="px-2 py-1 rounded text-xs font-medium">
-                                            {{ sale.status_label || sale.status }}
-                                        </span>
+                                        <StatusBadge
+                                            :status="sale.status"
+                                            type="sale"
+                                            :show-pulse="sale.status === 'processing'"
+                                        />
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-500">Total Items:</span>
@@ -298,10 +300,20 @@
                                                 R$ {{ formatPrice(item.total_price) }}
                                             </td>
                                             <td class="px-6 py-4 text-center">
-                                                <span :class="getItemStatusClass(item.status)"
-                                                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-                                                    {{ getItemStatusLabel(item.status) }}
-                                                </span>
+                                                <div class="flex flex-col items-center space-y-1">
+                                                    <StatusBadge
+                                                        :status="item.status"
+                                                        type="item"
+                                                        :show-pulse="item.status === 'processing'"
+                                                    />
+                                                    <div
+                                                        v-if="item.error_message"
+                                                        class="text-xs text-red-600 max-w-32 truncate"
+                                                        :title="item.error_message"
+                                                    >
+                                                        {{ item.error_message }}
+                                                    </div>
+                                                </div>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -381,7 +393,81 @@
                             <h3 class="text-lg font-medium text-gray-900 mb-1">No Items Found</h3>
                             <p class="text-gray-500">This sale doesn't have any items associated with it.</p>
                         </div>
-                    </div>                    <!-- Action Buttons -->
+                    </div>
+
+                    <!-- Retry Section for Failed Items -->
+                    <div v-if="hasFailedItems() || sale.status === 'processing'" class="p-6 border-t border-gray-200 bg-yellow-50">
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm">
+                                <span v-if="hasFailedItems()" class="text-red-600 font-medium">
+                                    ⚠️ {{ getFailedItemsCount() }} item(s) failed to process
+                                </span>
+                                <span v-else-if="sale.status === 'processing'" class="text-blue-600 font-medium">
+                                    ⏳ Sale is being processed...
+                                </span>
+                            </div>
+                            <div class="flex space-x-3">
+                                <button
+                                    v-if="hasFailedItems() && canRetry()"
+                                    @click="retrySale"
+                                    :disabled="retrying"
+                                    class="inline-flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-400 text-white text-sm font-medium rounded-md transition-colors duration-200"
+                                >
+                                    <LoadingState
+                                        v-if="retrying"
+                                        :show="true"
+                                        type="spinner"
+                                        size="xs"
+                                        color="gray"
+                                        :show-text="false"
+                                        class="mr-2"
+                                    />
+                                    <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                    </svg>
+                                    {{ retrying ? 'Retrying...' : 'Retry Failed Items' }}
+                                </button>
+
+                                <button
+                                    v-if="sale.status === 'processing'"
+                                    @click="refreshStatus"
+                                    :disabled="refreshing"
+                                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-md transition-colors duration-200"
+                                >
+                                    <LoadingState
+                                        v-if="refreshing"
+                                        :show="true"
+                                        type="spinner"
+                                        size="xs"
+                                        color="gray"
+                                        :show-text="false"
+                                        class="mr-2"
+                                    />
+                                    <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                    </svg>
+                                    {{ refreshing ? 'Refreshing...' : 'Refresh Status' }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Failed Items Details -->
+                        <div v-if="hasFailedItems()" class="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                            <h5 class="text-sm font-medium text-red-800 mb-2">Failed Items:</h5>
+                            <div class="space-y-1">
+                                <div
+                                    v-for="item in getFailedItems()"
+                                    :key="item.id"
+                                    class="text-sm text-red-700 flex justify-between"
+                                >
+                                    <span>{{ item.product_sku?.products?.name || 'N/A' }}</span>
+                                    <span class="text-xs text-red-600">{{ item.error_message }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between">
                         <a :href="route('sales.index')"
                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
@@ -410,17 +496,27 @@
 
 <script>
 import AppLayout from "@/Layouts/AppLayout.vue";
+import StatusBadge from "@/Components/UI/StatusBadge.vue";
+import LoadingState from "@/Components/UI/LoadingState.vue";
 import { router } from "@inertiajs/vue3";
 
 export default {
     components: {
         AppLayout,
+        StatusBadge,
+        LoadingState,
     },
     props: {
         sale: {
             type: Object,
             required: true,
         },
+    },
+    data() {
+        return {
+            retrying: false,
+            refreshing: false,
+        };
     },
     computed: {
         orderItems() {
@@ -562,6 +658,76 @@ export default {
         confirmDelete() {
             if (confirm('Are you sure you want to delete this sale? This action cannot be undone.')) {
                 router.delete(route('sales.destroy', this.sale.id));
+            }
+        },
+
+        // Novos métodos para Fase 4
+        hasFailedItems() {
+            if (!this.orderItems) return false;
+            return this.orderItems.some(item => item.status === 'failed');
+        },
+
+        getFailedItems() {
+            if (!this.orderItems) return [];
+            return this.orderItems.filter(item => item.status === 'failed');
+        },
+
+        getFailedItemsCount() {
+            return this.getFailedItems().length;
+        },
+
+        canRetry() {
+            return ['failed', 'pending'].includes(this.sale.status);
+        },
+
+        async retrySale() {
+            if (this.retrying) return;
+
+            this.retrying = true;
+
+            try {
+                await router.patch(route('sales.retry', this.sale.id), {}, {
+                    onSuccess: (page) => {
+                        // Atualizar dados da página
+                        this.$page.props.sale = page.props.sale;
+
+                        // Mostrar mensagem de sucesso
+                        this.$page.props.flash = {
+                            success: 'Sale retry initiated successfully!'
+                        };
+                    },
+                    onError: (errors) => {
+                        console.error('Retry failed:', errors);
+                        alert('Failed to retry sale. Please try again.');
+                    }
+                });
+            } catch (error) {
+                console.error('Retry error:', error);
+                alert('An error occurred while retrying the sale.');
+            } finally {
+                this.retrying = false;
+            }
+        },
+
+        async refreshStatus() {
+            if (this.refreshing) return;
+
+            this.refreshing = true;
+
+            try {
+                await router.reload({
+                    onSuccess: (page) => {
+                        // Dados são automaticamente atualizados
+                        console.log('Status refreshed successfully');
+                    },
+                    onError: (errors) => {
+                        console.error('Refresh failed:', errors);
+                    }
+                });
+            } catch (error) {
+                console.error('Refresh error:', error);
+            } finally {
+                this.refreshing = false;
             }
         }
     },

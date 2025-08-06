@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 class ProductsSku extends Model
 {
@@ -60,6 +61,36 @@ class ProductsSku extends Model
         $totalIn = $this->stockMovements()->where('type', 'in')->sum('quantity');
         $totalOut = $this->stockMovements()->where('type', 'out')->sum('quantity');
         return $totalIn - $totalOut;
+    }
+
+    /**
+     * 🚀 Método otimizado para alta demanda com cache
+     */
+    public function getCachedStock(): int
+    {
+        if (!config('sales.high_demand.cache.enabled', false)) {
+            return $this->getCurrentStock();
+        }
+
+        $cacheKey = config('sales.high_demand.cache.prefix', 'stock:') . $this->id;
+        $ttl = config('sales.high_demand.cache.ttl', 30);
+
+        return Cache::remember($cacheKey, $ttl, function () {
+            return $this->getCurrentStock();
+        });
+    }
+
+    /**
+     * 🔄 Invalidar cache quando estoque muda
+     */
+    public function invalidateStockCache(): void
+    {
+        if (!config('sales.high_demand.cache.enabled', false)) {
+            return;
+        }
+
+        $cacheKey = config('sales.high_demand.cache.prefix', 'stock:') . $this->id;
+        Cache::forget($cacheKey);
     }
 
     public function getStockValue(): float

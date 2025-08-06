@@ -45,4 +45,34 @@ class StockMovement extends Model
     {
         return $this->belongsTo(Store::class, 'store_id');
     }
+
+    /**
+     * 🔄 Invalidar cache de estoque quando movimento é criado/atualizado
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($stockMovement) {
+            $stockMovement->invalidateProductStockCache();
+        });
+
+        static::updated(function ($stockMovement) {
+            $stockMovement->invalidateProductStockCache();
+        });
+
+        static::deleted(function ($stockMovement) {
+            $stockMovement->invalidateProductStockCache();
+        });
+    }
+
+    /**
+     * 🗑️ Invalidar cache do produto relacionado
+     */
+    private function invalidateProductStockCache(): void
+    {
+        if ($this->productSku) {
+            $this->productSku->invalidateStockCache();
+        }
+    }
 }
