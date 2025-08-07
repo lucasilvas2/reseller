@@ -20,12 +20,12 @@ const props = defineProps({
 });
 
 const form = useForm({
-    barcode: props.movement.product_sku?.barcode || '',
-    sku: props.movement.product_sku?.sku || '',
+    barcode: props.movement.product_variant?.barcode || '',
+    sku: props.movement.product_variant?.sku || '',
     quantity: props.movement.quantity || '',
-    cost_price: props.movement.product_sku?.cost_price || null,
-    sale_price: props.movement.product_sku?.sale_price || null,
-    product_id: props.movement.product_sku?.product_id || null,
+    cost_price: props.movement.product_variant?.cost_price || null,
+    sale_price: props.movement.product_variant?.sale_price || null,
+    product_id: props.movement.product_variant?.product_id || null,
     errors: {},
 });
 

@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 
-class ProductsSku extends Model
+class ProductVariant extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProductsSkuFactory> */
+    /** @use HasFactory<\Database\Factories\ProductVariantFactory> */
     use HasFactory;
+
+    protected $table = 'product_variants'; // Especificar explicitamente
 
     protected $fillable = [
         'product_id',
@@ -27,27 +29,19 @@ class ProductsSku extends Model
         'sale_price' => 'decimal:2',
     ];
 
-    public function products(): BelongsTo
-    {
-        return $this->belongsTo(Products::class, 'product_id');
-    }
-
-    /**
-     * Alias for products relationship (singular)
-     */
     public function product(): BelongsTo
     {
-        return $this->products();
+        return $this->belongsTo(Product::class, 'product_id');
     }
 
     public function stockMovements(): HasMany
     {
-        return $this->hasMany(StockMovement::class, 'product_sku_id');
+        return $this->hasMany(StockMovement::class, 'product_variant_id');
     }
 
     public function orderItems(): HasMany
     {
-        return $this->hasMany(OrderItem::class, 'product_sku_id');
+        return $this->hasMany(OrderItem::class, 'product_variant_id');
     }
 
     public function store(): BelongsTo
@@ -55,12 +49,17 @@ class ProductsSku extends Model
         return $this->belongsTo(Store::class);
     }
 
-    // Métodos de cálculo de estoque
+    // Métodos de domínio específicos para variantes
+    public function hasStock(): bool
+    {
+        return $this->getCurrentStock() > 0;
+    }
+
     public function getCurrentStock(): int
     {
-        $totalIn = $this->stockMovements()->where('type', 'in')->sum('quantity');
-        $totalOut = $this->stockMovements()->where('type', 'out')->sum('quantity');
-        return $totalIn - $totalOut;
+        return $this->stockMovements()
+            ->selectRaw('COALESCE(SUM(CASE WHEN type = "in" THEN quantity WHEN type = "out" THEN -quantity END), 0) as total')
+            ->value('total') ?? 0;
     }
 
     /**

@@ -56,19 +56,19 @@
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-500">Product Name:</span>
                                         <span class="text-sm text-gray-900">
-                                            {{ movement.product_sku?.products?.name || 'N/A' }}
+                                            {{ movement.product_variant?.products?.name || 'N/A' }}
                                         </span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-500">SKU:</span>
                                         <span class="text-sm text-gray-900">
-                                            {{ movement.product_sku?.sku || 'N/A' }}
+                                            {{ movement.product_variant?.sku || 'N/A' }}
                                         </span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-500">Barcode:</span>
                                         <span class="text-sm text-gray-900">
-                                            {{ movement.product_sku?.barcode || 'N/A' }}
+                                            {{ movement.product_variant?.barcode || 'N/A' }}
                                         </span>
                                     </div>
                                 </div>
@@ -81,25 +81,25 @@
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-500">Cost Price:</span>
                                         <span class="text-sm text-gray-900">
-                                            ${{ formatPrice(movement.product_sku?.cost_price) }}
+                                            ${{ formatPrice(movement.product_variant?.cost_price) }}
                                         </span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-500">Sale Price:</span>
                                         <span class="text-sm text-gray-900">
-                                            ${{ formatPrice(movement.product_sku?.sale_price) }}
+                                            ${{ formatPrice(movement.product_variant?.sale_price) }}
                                         </span>
                                     </div>
                                     <div class="flex justify-between border-t pt-3">
                                         <span class="text-sm font-medium text-gray-700">Total Cost:</span>
                                         <span class="text-sm font-bold text-gray-900">
-                                            ${{ formatPrice(movement.product_sku?.cost_price * movement.quantity) }}
+                                            ${{ formatPrice(movement.product_variant?.cost_price * movement.quantity) }}
                                         </span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-700">Total Sale Value:</span>
                                         <span class="text-sm font-bold text-green-600">
-                                            ${{ formatPrice(movement.product_sku?.sale_price * movement.quantity) }}
+                                            ${{ formatPrice(movement.product_variant?.sale_price * movement.quantity) }}
                                         </span>
                                     </div>
                                 </div>
@@ -166,7 +166,7 @@
                             </div>
 
                             <!-- Profit Analysis -->
-                            <div v-if="movement.product_sku?.cost_price && movement.product_sku?.sale_price">
+                            <div v-if="movement.product_variant?.cost_price && movement.product_variant?.sale_price">
                                 <h4 class="text-lg font-medium text-gray-900 mb-4">Profit Analysis</h4>
                                 <div class="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg space-y-3">
                                     <div class="flex justify-between">
@@ -258,8 +258,8 @@ export default {
             return classes[type] || 'bg-gray-100 text-gray-800';
         },
         getUnitProfit() {
-            const cost = parseFloat(this.movement.product_sku?.cost_price || 0);
-            const sale = parseFloat(this.movement.product_sku?.sale_price || 0);
+            const cost = parseFloat(this.movement.product_variant?.cost_price || 0);
+            const sale = parseFloat(this.movement.product_variant?.sale_price || 0);
             return sale - cost;
         },
         getTotalProfit() {
@@ -274,8 +274,8 @@ export default {
             return profit >= 0 ? 'text-green-600' : 'text-red-600';
         },
         getMarginPercentage() {
-            const cost = parseFloat(this.movement.product_sku?.cost_price || 0);
-            const sale = parseFloat(this.movement.product_sku?.sale_price || 0);
+            const cost = parseFloat(this.movement.product_variant?.cost_price || 0);
+            const sale = parseFloat(this.movement.product_variant?.sale_price || 0);
             if (cost === 0) return '0';
             return ((sale - cost) / cost * 100).toFixed(1);
         },

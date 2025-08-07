@@ -17,7 +17,11 @@ class StockMovementFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'product_variant_id' => 1, // Will be overridden in tests
+            'type' => $this->faker->randomElement(['in', 'out']),
+            'quantity' => $this->faker->numberBetween(1, 100),
+            'store_id' => 1, // Will be overridden in tests
+            'user_id' => 1, // Will be overridden in tests
         ];
     }
 }

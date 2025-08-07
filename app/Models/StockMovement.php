@@ -21,9 +21,15 @@ class StockMovement extends Model
         'sale_id',
     ];
 
+    public function productVariant()
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    // Alias para compatibilidade (remover após refatoração completa)
     public function productSku()
     {
-        return $this->belongsTo(ProductsSku::class, 'product_sku_id');
+        return $this->productVariant();
     }
 
     public function user()

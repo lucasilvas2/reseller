@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSaleRequest;
 use App\Models\Client;
-use App\Models\Products;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\OrderItem;
-use App\Models\ProductsSku;
+use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use App\Contracts\SaleProcessor;
 use Illuminate\Http\Request;
@@ -19,23 +19,23 @@ class SaleController extends Controller
 {
     protected Sale $sale;
     protected Client $client;
-    protected Products $products;
-    protected ProductsSku $productsSku;
+    protected Product $product;
+    protected ProductVariant $productVariant;
     protected StockMovement $stockMovement;
     protected SaleProcessor $saleProcessor;
 
     public function __construct(
         Sale $sale,
-        Products $products,
+        Product $product,
         Client $client,
-        ProductsSku $productsSku,
+        ProductVariant $productVariant,
         StockMovement $stockMovement,
         SaleProcessor $saleProcessor
     ) {
         $this->sale = $sale;
-        $this->products = $products;
+        $this->product = $product;
         $this->client = $client;
-        $this->productsSku = $productsSku;
+        $this->productVariant = $productVariant;
         $this->stockMovement = $stockMovement;
         $this->saleProcessor = $saleProcessor;
     }
@@ -43,7 +43,7 @@ class SaleController extends Controller
     public function index(Request $request)
     {
         $query = $this->sale->where('store_id', Auth::user()->store_id)
-            ->with(['client', 'orderItems.productSku.products']);
+            ->with(['client', 'orderItems.productVariant.products']);
 
         if($request->filled('search')) {
             $search = $request->search;
@@ -87,8 +87,8 @@ class SaleController extends Controller
                 'status' => $sale->status,
                 'products' => $sale->orderItems->map(function ($orderItem) {
                     return [
-                        'id' => $orderItem->productSku->products->id,
-                        'name' => $orderItem->productSku->products->name,
+                        'id' => $orderItem->productVariant->product->id,
+                        'name' => $orderItem->productVariant->product->name,
                         'quantity' => $orderItem->quantity,
                         'price' => $orderItem->unit_price,
                     ];
@@ -138,8 +138,8 @@ class SaleController extends Controller
             });
 
         // Buscar produtos com SKUs e estoque
-        $products = $this->products->where('store_id', $storeId)
-            ->with(['productSkus' => function($query) use ($storeId) {
+        $products = $this->product->where('store_id', $storeId)
+            ->with(['variants' => function($query) use ($storeId) {
                 $query->where('store_id', $storeId)
                       ->with('stockMovements');
             }])
@@ -151,7 +151,7 @@ class SaleController extends Controller
                     'description' => $product->description,
                     'category' => $product->category ?? 'Sem categoria',
                     'brand_name' => $product->brand->name ?? 'Sem marca',
-                    'skus' => $product->productSkus->map(function ($sku) {
+                    'skus' => $product->variants->map(function ($sku) {
                         $currentStock = $sku->getCurrentStock();
                         return [
                             'id' => $sku->id,
@@ -201,7 +201,7 @@ class SaleController extends Controller
                 foreach ($validated['items'] as $item) {
                     OrderItem::create([
                         'sale_id' => $sale->id,
-                        'product_sku_id' => $item['product_sku_id'],
+                        'product_variant_id' => $item['product_variant_id'],
                         'quantity' => $item['quantity'],
                         'unit_price' => $item['unit_price'],
                         'total_price' => $item['total_price'],
@@ -262,7 +262,7 @@ class SaleController extends Controller
         // Carregar relacionamentos necessários com todos os dados
         $sale->load([
             'client.user',
-            'orderItems.productSku.products.brand',
+            'orderItems.productVariant.products.brand',
             'store'
         ]);
 
@@ -291,8 +291,8 @@ class SaleController extends Controller
             ],
             'order_items' => $sale->orderItems->map(function ($item) {
                 // Verificar se os relacionamentos existem antes de acessá-los
-                $productSku = $item->productSku;
-                $product = $productSku ? $productSku->products : null;
+                $productVariant = $item->productVariant;
+                $product = $productVariant ? $productVariant->product : null;
                 $brand = $product && $product->brand ? $product->brand : null;
 
                 return [
@@ -302,11 +302,11 @@ class SaleController extends Controller
                     'total_price' => $item->total_price,
                     'status' => $item->status ?? 'pending',
                     'product_sku' => [
-                        'id' => $productSku ? $productSku->id : null,
-                        'sku' => $productSku ? ($productSku->sku ?? 'N/A') : 'N/A',
-                        'barcode' => $productSku ? ($productSku->barcode ?? null) : null,
-                        'cost_price' => $productSku ? ($productSku->cost_price ?? 0) : 0,
-                        'sale_price' => $productSku ? ($productSku->sale_price ?? 0) : 0,
+                        'id' => $productVariant ? $productVariant->id : null,
+                        'sku' => $productVariant ? ($productVariant->sku ?? 'N/A') : 'N/A',
+                        'barcode' => $productVariant ? ($productVariant->barcode ?? null) : null,
+                        'cost_price' => $productVariant ? ($productVariant->cost_price ?? 0) : 0,
+                        'sale_price' => $productVariant ? ($productVariant->sale_price ?? 0) : 0,
                         'products' => [
                             'id' => $product ? $product->id : null,
                             'name' => $product ? ($product->name ?? 'N/A') : 'N/A',
@@ -328,10 +328,10 @@ class SaleController extends Controller
             ],
             'financial_summary' => [
                 'total_cost' => $sale->orderItems->sum(function($item) {
-                    return ($item->productSku->cost_price ?? 0) * $item->quantity;
+                    return ($item->productVariant->cost_price ?? 0) * $item->quantity;
                 }),
                 'total_profit' => $sale->orderItems->sum(function($item) {
-                    $costPrice = $item->productSku->cost_price ?? 0;
+                    $costPrice = $item->productVariant->cost_price ?? 0;
                     $salePrice = $item->unit_price ?? 0;
                     return ($salePrice - $costPrice) * $item->quantity;
                 }),
@@ -339,7 +339,7 @@ class SaleController extends Controller
                 'average_item_price' => $sale->orderItems->avg('unit_price'),
                 'highest_item_value' => $sale->orderItems->max('total_price'),
                 'most_profitable_item_value' => $sale->orderItems->max(function($item) {
-                    $costPrice = $item->productSku->cost_price ?? 0;
+                    $costPrice = $item->productVariant->cost_price ?? 0;
                     $salePrice = $item->unit_price ?? 0;
                     return ($salePrice - $costPrice) * $item->quantity;
                 }),

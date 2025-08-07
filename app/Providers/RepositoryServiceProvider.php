@@ -21,7 +21,7 @@ class RepositoryServiceProvider extends ServiceProvider
         // Register InventoryRepository
         $this->app->singleton(InventoryRepository::class, function ($app) {
             return new InventoryRepository(
-                $app->make(\App\Models\ProductsSku::class),
+                $app->make(\App\Models\ProductVariant::class),
                 $app->make(\App\Models\StockMovement::class)
             );
         });

@@ -84,7 +84,7 @@ class InventoryItemCollection extends ResourceCollection
 
         foreach ($this->collection as $item) {
             if ($item->relationLoaded('products')) {
-                $category = $item->products->category ?? 'Uncategorized';
+                $category = $item->product->category ?? 'Uncategorized';
                 $categories[$category] = ($categories[$category] ?? 0) + 1;
             }
         }

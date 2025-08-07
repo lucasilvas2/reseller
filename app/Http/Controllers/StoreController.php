@@ -6,7 +6,7 @@ use App\Models\Store;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class StoresController extends Controller
+class StoreController extends Controller
 {
     protected Store $storeModel;
 
@@ -60,7 +60,7 @@ class StoresController extends Controller
         $perPage = $request->get('per_page', 10);
         $stores = $query->paginate($perPage);
 
-        $transformedData = $stores->getCollection()->transform(function ($store) {
+        $transformedData = collect($stores->items())->map(function ($store) {
             return [
                 'id' => $store->id,
                 'name' => $store->name,

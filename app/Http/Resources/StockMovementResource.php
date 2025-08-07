@@ -40,10 +40,10 @@ class StockMovementResource extends JsonResource
                     'sale_price' => $this->productSku->sale_price,
                     'product' => $this->whenLoaded('productSku.products', function () {
                         return [
-                            'id' => $this->productSku->products->id,
-                            'name' => $this->productSku->products->name,
-                            'description' => $this->productSku->products->description,
-                            'category' => $this->productSku->products->category,
+                            'id' => $this->productSku->product->id,
+                            'name' => $this->productSku->product->name,
+                            'description' => $this->productSku->product->description,
+                            'category' => $this->productSku->product->category,
                         ];
                     }),
                 ];
@@ -108,11 +108,11 @@ class StockMovementResource extends JsonResource
      */
     private function getDisplayName(): string
     {
-        if (!$this->relationLoaded('productSku') || !$this->productSku->relationLoaded('products')) {
+        if (!$this->relationLoaded('productSku') || !$this->productSku->relationLoaded('product')) {
             return "Movimentação #{$this->id}";
         }
 
-        $productName = $this->productSku->products->name ?? 'Produto Desconhecido';
+        $productName = $this->productSku->product->name ?? 'Produto Desconhecido';
         $sku = $this->productSku->sku ?? 'N/A';
 
         return "{$productName} ({$sku})";

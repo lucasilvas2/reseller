@@ -301,7 +301,7 @@ export default {
         viewMovements(item) {
             // Redirect to movements page with filter by product
             router.get(route('stocks.movements.index', {
-                product_sku_id: item.id
+                product_variant_id: item.id
             }));
         },
         addStock(item) {

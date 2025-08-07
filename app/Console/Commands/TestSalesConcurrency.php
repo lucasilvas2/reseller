@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Contracts\SaleProcessor;
 use App\Models\Sale;
 use App\Models\Client;
-use App\Models\ProductsSku;
+use App\Models\ProductVariant;
 use App\Models\OrderItem;
 use App\Models\StockMovement;
 use Illuminate\Console\Command;
@@ -74,7 +74,7 @@ class TestSalesConcurrency extends Command
             }
 
             // Criar produto de teste com estoque inicial via StockMovement
-            $product = ProductsSku::firstOrCreate([
+            $product = ProductVariant::firstOrCreate([
                 'sku' => 'CONCURRENCY-TEST'
             ], [
                 'product_id' => 1,
@@ -111,13 +111,13 @@ class TestSalesConcurrency extends Command
 
         if ($productId) {
             // Buscar por ID ou SKU
-            return ProductsSku::where('id', $productId)
+            return ProductVariant::where('id', $productId)
                 ->orWhere('sku', $productId)
                 ->first();
         }
 
         // Produto padrão de teste
-        return ProductsSku::where('sku', 'CONCURRENCY-TEST')->first();
+        return ProductVariant::where('sku', 'CONCURRENCY-TEST')->first();
     }
 
     private function runConcurrencyTest(ProductsSku $product, int $users, int $quantity): void

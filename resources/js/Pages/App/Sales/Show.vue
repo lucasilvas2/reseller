@@ -263,23 +263,23 @@
                                                     </div>
                                                     <div>
                                                         <div class="text-sm font-medium text-gray-900">
-                                                            {{ item.product_sku?.products?.name || 'N/A' }}
+                                                            {{ item.product_variant?.product?.name || 'N/A' }}
                                                         </div>
                                                         <div class="text-sm text-gray-500">
-                                                            {{ item.product_sku?.products?.brand?.name || 'No Brand' }}
+                                                            {{ item.product_variant?.product?.brand?.name || 'No Brand' }}
                                                         </div>
-                                                        <div v-if="item.product_sku?.products?.description" class="text-xs text-gray-400 mt-1 max-w-xs truncate">
-                                                            {{ item.product_sku?.products?.description }}
+                                                        <div v-if="item.product_variant?.product?.description" class="text-xs text-gray-400 mt-1 max-w-xs truncate">
+                                                            {{ item.product_variant?.product?.description }}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td class="px-6 py-4">
                                                 <div class="text-sm text-gray-900">
-                                                    <span class="font-medium">SKU:</span> {{ item.product_sku?.sku || 'N/A' }}
+                                                    <span class="font-medium">SKU:</span> {{ item.product_variant?.sku || 'N/A' }}
                                                 </div>
-                                                <div v-if="item.product_sku?.barcode" class="text-sm text-gray-500">
-                                                    <span class="font-medium">Barcode:</span> {{ item.product_sku?.barcode }}
+                                                <div v-if="item.product_variant?.barcode" class="text-sm text-gray-500">
+                                                    <span class="font-medium">Barcode:</span> {{ item.product_variant?.barcode }}
                                                 </div>
                                             </td>
                                             <td class="px-6 py-4 text-center">
@@ -288,7 +288,7 @@
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 text-right text-sm text-gray-500">
-                                                R$ {{ formatPrice(item.product_sku?.cost_price || 0) }}
+                                                R$ {{ formatPrice(item.product_variant?.cost_price || 0) }}
                                             </td>
                                             <td class="px-6 py-4 text-right text-sm font-medium text-gray-900">
                                                 R$ {{ formatPrice(item.unit_price) }}
@@ -460,7 +460,7 @@
                                     :key="item.id"
                                     class="text-sm text-red-700 flex justify-between"
                                 >
-                                    <span>{{ item.product_sku?.products?.name || 'N/A' }}</span>
+                                    <span>{{ item.product_variant?.product?.name || 'N/A' }}</span>
                                     <span class="text-xs text-red-600">{{ item.error_message }}</span>
                                 </div>
                             </div>
@@ -525,15 +525,15 @@ export default {
 
             // Normalizar formato dos dados se necessário
             return items.map(item => {
-                // Se o item já tem product_sku, retorna como está
-                if (item.product_sku) {
+                // Se o item já tem product_variant, retorna como está
+                if (item.product_variant) {
                     return item;
                 }
 
-                // Se não tem product_sku, cria a estrutura esperada baseada nos dados disponíveis
+                // Se não tem product_variant, cria a estrutura esperada baseada nos dados disponíveis
                 return {
                     ...item,
-                    product_sku: {
+                    product_variant: {
                         sku: item.sku || 'N/A',
                         barcode: null,
                         cost_price: 0, // Valor padrão pois não está no JSON original
@@ -608,7 +608,7 @@ export default {
             return this.sale.financial_summary?.most_profitable_item_value || 0;
         },
         getItemProfit(item) {
-            const costPrice = parseFloat(item.product_sku?.cost_price || 0);
+            const costPrice = parseFloat(item.product_variant?.cost_price || 0);
             const salePrice = parseFloat(item.unit_price || 0);
             return (salePrice - costPrice) * item.quantity;
         },

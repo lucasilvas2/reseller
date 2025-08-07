@@ -88,14 +88,14 @@ const handleQuickCreateClient = async (clientData) => {
 };
 
 const handleProductSelected = (product) => {
-    const existingIndex = saleItems.value.findIndex(item => item.product_sku_id === product.id);
+    const existingIndex = saleItems.value.findIndex(item => item.product_variant_id === product.id);
 
     if (existingIndex >= 0) {
         saleItems.value[existingIndex].quantity += 1;
     } else {
         const newItem = {
             id: Date.now(),
-            product_sku_id: product.id,
+            product_variant_id: product.id,
             product: product,
             quantity: 1,
             unit_price: parseFloat(product.price) || 0
@@ -130,7 +130,7 @@ const handleRemoveItem = (index) => {
 
 const updateFormItems = () => {
     form.items = saleItems.value.map(item => ({
-        product_sku_id: item.product_sku_id,
+        product_variant_id: item.product_variant_id,
         quantity: item.quantity,
         unit_price: item.unit_price
     }));

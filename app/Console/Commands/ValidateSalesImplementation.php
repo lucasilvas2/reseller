@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Sale;
 use App\Models\OrderItem;
-use App\Models\ProductsSku;
+use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;

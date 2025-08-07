@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Products extends Model
+class Product extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProductsFactory> */
+    /** @use HasFactory<\Database\Factories\ProductFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -25,7 +25,7 @@ class Products extends Model
      */
     public function brand(): BelongsTo
     {
-        return $this->belongsTo(Brands::class, 'brand_id');
+        return $this->belongsTo(Brand::class, 'brand_id');
     }
 
     /**
@@ -37,19 +37,27 @@ class Products extends Model
     }
 
     /**
-     * Get the product SKUs for the product.
+     * Get the product variants for the product.
      */
-    public function productSkus(): HasMany
+    public function variants(): HasMany
     {
-        return $this->hasMany(ProductsSku::class, 'product_id');
+        return $this->hasMany(ProductVariant::class, 'product_id');
     }
 
     /**
-     * Alias for productSkus relationship
+     * Alias for variants relationship (backward compatibility)
+     */
+    public function productSkus(): HasMany
+    {
+        return $this->variants();
+    }
+
+    /**
+     * Alias for variants relationship
      */
     public function skus(): HasMany
     {
-        return $this->productSkus();
+        return $this->variants();
     }
 
     /**

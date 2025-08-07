@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Contracts\SaleProcessor;
 use App\Models\Sale;
 use App\Models\Client;
-use App\Models\ProductsSku;
+use App\Models\ProductVariant;
 use App\Models\OrderItem;
 use App\Models\StockMovement;
 use Illuminate\Console\Command;
@@ -138,7 +138,7 @@ class TestSalesQueue extends Command
             );
 
             // Criar produto SKU se não existir
-            $product = \App\Models\Products::firstOrCreate(
+            $product = \App\Models\Product::firstOrCreate(
                 ['name' => 'Produto Teste'],
                 [
                     'name' => 'Produto Teste',
@@ -148,7 +148,7 @@ class TestSalesQueue extends Command
                 ]
             );
 
-            $productSku = ProductsSku::firstOrCreate(
+            $productSku = ProductVariant::firstOrCreate(
                 ['sku' => 'TEST-001'],
                 [
                     'product_id' => $product->id,
@@ -215,7 +215,7 @@ class TestSalesQueue extends Command
     {
         // Buscar qualquer cliente disponível
         $client = Client::with('user')->first();
-        $productSku = ProductsSku::where('sku', 'TEST-001')->first();
+        $productSku = ProductVariant::where('sku', 'TEST-001')->first();
 
         if (!$client || !$productSku) {
             throw new \Exception('Dados de teste não encontrados. Use --create-data');

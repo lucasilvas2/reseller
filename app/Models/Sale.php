@@ -115,11 +115,11 @@ class Sale extends Model
     public function calculateProfitMargin(): float
     {
         $totalCost = $this->orderItems->sum(function($item) {
-            return ($item->productSku->cost_price ?? 0) * $item->quantity;
+            return ($item->productVariant->cost_price ?? 0) * $item->quantity;
         });
 
         $totalProfit = $this->orderItems->sum(function($item) {
-            $costPrice = $item->productSku->cost_price ?? 0;
+            $costPrice = $item->productVariant->cost_price ?? 0;
             $salePrice = $item->unit_price ?? 0;
             return ($salePrice - $costPrice) * $item->quantity;
         });

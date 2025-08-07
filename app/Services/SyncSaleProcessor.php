@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\OrderItem;
-use App\Models\ProductsSku;
+use App\Models\ProductVariant;
 use App\Models\Sale;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\DB;
@@ -90,24 +90,24 @@ class SyncSaleProcessor implements \App\Contracts\SaleProcessor
         try {
             $item->update(['status' => 'processing']);
 
-            // 🔒 LOCK no ProductSku para prevenir race conditions
-            $productSku = ProductsSku::where('id', $item->product_sku_id)
+            // 🔒 LOCK no ProductVariant para prevenir race conditions
+            $productVariant = ProductVariant::where('id', $item->product_variant_id)
                 ->lockForUpdate()
                 ->first();
 
-            if (!$productSku) {
-                throw new \Exception('Product SKU not found for item ID: ' . $item->id);
+            if (!$productVariant) {
+                throw new \Exception('Product Variant not found for item ID: ' . $item->id);
             }
 
             // ✅ Calcular estoque atual baseado em StockMovements
-            $availableStock = $productSku->getCurrentStock();
+            $availableStock = $productVariant->getCurrentStock();
             if ($availableStock < $item->quantity) {
                 throw new \Exception("Estoque insuficiente. Disponível: {$availableStock}, Solicitado: {$item->quantity}");
             }
 
             // ✅ Criar movimento de estoque de saída (estrutura correta)
             StockMovement::create([
-                'product_sku_id' => $item->product_sku_id,
+                'product_variant_id' => $item->product_variant_id,
                 'store_id' => $item->sale->store_id,
                 'type' => 'out',
                 'quantity' => $item->quantity,
@@ -122,7 +122,7 @@ class SyncSaleProcessor implements \App\Contracts\SaleProcessor
             Log::info('OrderItem processed successfully', [
                 'order_item_id' => $item->id,
                 'sale_id' => $item->sale_id,
-                'product_sku_id' => $item->product_sku_id,
+                'product_variant_id' => $item->product_variant_id,
                 'quantity' => $item->quantity
             ]);
 

@@ -1,13 +1,14 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\BrandsController;
-use App\Http\Controllers\ClientsController;
+use App\Http\Controllers\BrandController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SaleController;
-use App\Http\Controllers\StoresController;
+use App\Http\Controllers\StoreController;
 use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductVariantController;
 use App\Http\Controllers\PublicStoresController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\UserController;
@@ -32,12 +33,29 @@ Route::middleware([
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::middleware(['role:reseller'])->group(function () {
-        Route::get('/products', [ProductsController::class, 'index'])->name('products.index');
-        Route::get('/products/create', [ProductsController::class, 'create'])->name('products.create');
-        Route::post('/products/store', [ProductsController::class, 'store'])->name('products.store');
-        Route::get('/products/edit/{id}', [ProductsController::class, 'edit'])->name('products.edit');
-        Route::post('/products/update/{id}', [ProductsController::class, 'update'])->name('products.update');
-        Route::delete('/products/destroy/{id}', [ProductsController::class, 'destroy'])->name('products.destroy');
+        Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+        Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+        Route::post('/products/store', [ProductController::class, 'store'])->name('products.store');
+        Route::get('/products/edit/{id}', [ProductController::class, 'edit'])->name('products.edit');
+        Route::post('/products/update/{id}', [ProductController::class, 'update'])->name('products.update');
+        Route::delete('/products/destroy/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+
+        // Brands Management (Resource Routes)
+        Route::resource('brands', BrandController::class)->names([
+            'index' => 'admin.brands.index',
+            'create' => 'admin.brands.create',
+            'store' => 'admin.brands.store',
+            'edit' => 'admin.brands.edit',
+            'update' => 'admin.brands.update',
+            'destroy' => 'admin.brands.destroy'
+        ]);
+
+        // Product Variants Management
+        Route::resource('product-variants', ProductVariantController::class);
+
+        // Nested Product Variants (E-commerce Pattern)
+        Route::resource('products.variants', ProductVariantController::class)
+            ->except(['index']); // Variants are always nested under products
 
         // Inventory Management
         Route::prefix('inventory')->name('inventory.')->group(function () {
@@ -61,11 +79,11 @@ Route::middleware([
         Route::get('/stocks/inventory', [InventoryController::class, 'index'])->name('stocks.inventory.index');
 
         //clients
-        Route::get('/clients', [ClientsController::class, 'index'])->name('clients.index');
-        Route::get('/clients/create', [ClientsController::class, 'create'])->name('clients.create');
-        Route::post('/clients/store', [ClientsController::class, 'store'])->name('clients.store');
-        Route::delete('/clients/destroy/{id}', [ClientsController::class, 'destroy'])->name('clients.destroy');
-        Route::get('/clients/show/{id}', [ClientsController::class, 'show'])->name('clients.show');
+        Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
+        Route::get('/clients/create', [ClientController::class, 'create'])->name('clients.create');
+        Route::post('/clients/store', [ClientController::class, 'store'])->name('clients.store');
+        Route::delete('/clients/destroy/{id}', [ClientController::class, 'destroy'])->name('clients.destroy');
+        Route::get('/clients/show/{id}', [ClientController::class, 'show'])->name('clients.show');
 
         //sales
         Route::resource('sales', SaleController::class, [
@@ -85,9 +103,9 @@ Route::middleware([
 
         // Internal AJAX routes for sales components (no external API needed)
         Route::prefix('ajax')->name('ajax.')->group(function () {
-            Route::get('/products/search', [ProductsController::class, 'ajaxSearch'])->name('products.search');
-            Route::get('/clients/search', [ClientsController::class, 'ajaxSearch'])->name('clients.search');
-            Route::post('/clients/quick-create', [ClientsController::class, 'ajaxStore'])->name('clients.store');
+            Route::get('/products/search', [ProductController::class, 'ajaxSearch'])->name('products.search');
+            Route::get('/clients/search', [ClientController::class, 'ajaxSearch'])->name('clients.search');
+            Route::post('/clients/quick-create', [ClientController::class, 'ajaxStore'])->name('clients.store');
             Route::get('/sales/{sale}/status', [SaleController::class, 'ajaxStatus'])->name('sales.status');
         });
     });
@@ -125,20 +143,33 @@ Route::prefix('admin')->group(function () {
             ->name('admin.users.update');
 
         // Stores routes
-        Route::get('/stores', [StoresController::class, 'index'])
+        Route::get('/stores', [StoreController::class, 'index'])
             ->middleware('permission:admin.stores.index')
             ->name('admin.stores.index');
-        Route::get('/stores/create', [StoresController::class, 'create'])
+        Route::get('/stores/create', [StoreController::class, 'create'])
             ->middleware('permission:admin.stores.create')
             ->name('admin.stores.create');
-        Route::post('/stores/store', [StoresController::class, 'store'])
+        Route::post('/stores/store', [StoreController::class, 'store'])
             ->middleware('permission:admin.stores.create')
             ->name('admin.stores.store');
-        Route::get('/stores/edit/{id}', [StoresController::class, 'edit'])
+        Route::get('/stores/edit/{id}', [StoreController::class, 'edit'])
             ->middleware('permission:admin.stores.edit')
             ->name('admin.stores.edit');
-        Route::post('/stores/update/{id}', [StoresController::class, 'update'])
+        Route::post('/stores/update/{id}', [StoreController::class, 'update'])
             ->middleware('permission:admin.stores.update')
             ->name('admin.stores.update');
+
+        // Admin-only Brands Management (Alternative Admin Routes)
+        Route::prefix('admin-brands')->name('admin-brands.')->group(function () {
+            Route::get('/', [BrandController::class, 'index'])
+                ->middleware('permission:admin.brands.index')
+                ->name('index');
+            Route::get('/create', [BrandController::class, 'create'])
+                ->middleware('permission:admin.brands.create')
+                ->name('create');
+            Route::post('/store', [BrandController::class, 'store'])
+                ->middleware('permission:admin.brands.store')
+                ->name('store');
+        });
     });
 });

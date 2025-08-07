@@ -2,23 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Brands;
-use App\Models\Products;
+use App\Models\Brand;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class ProductsController extends Controller
+class ProductController extends Controller
 {
-    protected Products $productsModel;
-    protected Brands $brandsModel;
+    protected Product $productModel;
+    protected Brand $brandModel;
     public function __construct()
     {
-        $this->productsModel = new Products();
+        $this->productModel = new Product();
+        $this->brandModel = new Brand();
     }
 
     public function index(Request $request): \Inertia\Response
     {
-        $query = $this->productsModel->where('store_id', Auth::user()->store_id)
+        $query = $this->productModel->where('store_id', Auth::user()->store_id)
             ->with('brands');
 
         // Apply search filter
@@ -82,7 +83,7 @@ class ProductsController extends Controller
         });
 
         // Get brands for filter dropdown
-        $brands = Brands::where('store_id', Auth::user()->store_id)->get();
+        $brands = Brand::where('store_id', Auth::user()->store_id)->get();
 
         return inertia('App/Products/Index', [
             'data' => $transformedData,
@@ -102,7 +103,7 @@ class ProductsController extends Controller
 
     public function create(): \Inertia\Response
     {
-        $brands = Brands::where('store_id', Auth::user()->store_id)->get();
+        $brands = Brand::where('store_id', Auth::user()->store_id)->get();
         return inertia('App/Products/Create', compact('brands'));
     }
 
@@ -119,7 +120,7 @@ class ProductsController extends Controller
             'store_id' => Auth::user()->store_id,
         ]);
 
-        $product = $this->productsModel->create($request->all());
+        $product = $this->productModel->create($request->all());
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('images', 's3');
@@ -131,8 +132,8 @@ class ProductsController extends Controller
 
     public function edit(int $id): \Inertia\Response
     {
-        $product = $this->productsModel->findOrFail($id);
-        $brands = Brands::where('store_id', Auth::user()->store_id)->get();
+        $product = $this->productModel->findOrFail($id);
+        $brands = Brand::where('store_id', Auth::user()->store_id)->get();
         return inertia('App/Products/Edit', compact('product', 'brands'));
     }
 
@@ -145,7 +146,7 @@ class ProductsController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        $product = $this->productsModel->findOrFail($id);
+        $product = $this->productModel->findOrFail($id);
         $product->update($request->all());
 
         if ($request->hasFile('image')) {
@@ -158,7 +159,7 @@ class ProductsController extends Controller
 
     public function destroy(int $id): \Illuminate\Http\RedirectResponse
     {
-        $product = $this->productsModel
+        $product = $this->productModel
             ->where('store_id', Auth::user()->store_id)
             ->findOrFail($id);
 
@@ -179,8 +180,8 @@ class ProductsController extends Controller
             return response()->json(['data' => []]);
         }
 
-        $products = Products::where('store_id', Auth::user()->store_id)
-            ->with(['productSkus' => function($query) {
+        $products = Product::where('store_id', Auth::user()->store_id)
+            ->with(['variants' => function($query) {
                 $query->where('store_id', Auth::user()->store_id);
             }])
             ->where(function($q) use ($query) {
@@ -190,7 +191,7 @@ class ProductsController extends Controller
             ->limit(10)
             ->get()
             ->flatMap(function ($product) {
-                return $product->productSkus->map(function ($sku) use ($product) {
+                return $product->variants->map(function ($sku) use ($product) {
                     return [
                         'id' => $sku->id,
                         'name' => $product->name,

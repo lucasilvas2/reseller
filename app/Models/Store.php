@@ -46,12 +46,21 @@ class Store extends Model
     }
 
     /**
-     * Get the products SKUs for the store.
+     * Get the product variants for the store.
+     * @return HasMany
+     */
+    public function productVariants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    /**
+     * Alias para compatibilidade (remover após refatoração completa)
      * @return HasMany
      */
     public function productSkus(): HasMany
     {
-        return $this->hasMany(ProductsSku::class);
+        return $this->productVariants();
     }
 
     /**
@@ -60,7 +69,7 @@ class Store extends Model
      */
     public function products(): HasMany
     {
-        return $this->hasMany(Products::class);
+        return $this->hasMany(Product::class);
     }
 
     // Métodos utilitários

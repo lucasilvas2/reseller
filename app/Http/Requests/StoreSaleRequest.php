@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\ProductsSku;
+use App\Models\ProductVariant;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -48,11 +48,11 @@ class StoreSaleRequest extends FormRequest
             ],
 
             // Validação de cada item
-            'items.*.product_sku_id' => [
+            'items.*.product_variant_id' => [
                 'required',
                 'integer',
-                'exists:products_skus,id',
-                Rule::exists('products_skus', 'id')->where(function ($query) use ($storeId) {
+                'exists:product_variants,id',
+                Rule::exists('product_variants', 'id')->where(function ($query) use ($storeId) {
                     $query->where('store_id', $storeId);
                 }),
             ],
@@ -103,9 +103,9 @@ class StoreSaleRequest extends FormRequest
             'items.min' => 'A venda deve ter pelo menos um produto.',
             'items.max' => 'Uma venda pode ter no máximo 50 produtos.',
 
-            // Mensagens para product_sku_id
-            'items.*.product_sku_id.required' => 'Selecione um produto válido.',
-            'items.*.product_sku_id.exists' => 'Um dos produtos selecionados não existe ou não pertence à sua loja.',
+            // Mensagens para product_variant_id
+            'items.*.product_variant_id.required' => 'Selecione um produto válido.',
+            'items.*.product_variant_id.exists' => 'Um dos produtos selecionados não existe ou não pertence à sua loja.',
 
             // Mensagens para quantity
             'items.*.quantity.required' => 'Informe a quantidade do produto.',
@@ -138,7 +138,7 @@ class StoreSaleRequest extends FormRequest
         return [
             'client_id' => 'cliente',
             'items' => 'produtos',
-            'items.*.product_sku_id' => 'produto',
+            'items.*.product_variant_id' => 'produto',
             'items.*.quantity' => 'quantidade',
             'items.*.unit_price' => 'preço unitário',
             'notes' => 'observações',
@@ -171,21 +171,21 @@ class StoreSaleRequest extends FormRequest
         }
 
         foreach ($this->input('items', []) as $index => $item) {
-            if (!isset($item['product_sku_id']) || !isset($item['quantity'])) {
+            if (!isset($item['product_variant_id']) || !isset($item['quantity'])) {
                 continue;
             }
 
-            $productSku = ProductsSku::find($item['product_sku_id']);
+            $productVariant = ProductVariant::find($item['product_variant_id']);
 
-            if (!$productSku) {
+            if (!$productVariant) {
                 continue;
             }
 
-            $currentStock = $productSku->getCurrentStock();
+            $currentStock = $productVariant->getCurrentStock();
             $requestedQuantity = (int) $item['quantity'];
 
             if ($currentStock < $requestedQuantity) {
-                $productName = $productSku->products->name ?? 'Produto desconhecido';
+                $productName = $productSku->product->name ?? 'Produto desconhecido';
                 $validator->errors()->add(
                     "items.{$index}.quantity",
                     "Estoque insuficiente para '{$productName}'. Disponível: {$currentStock}, Solicitado: {$requestedQuantity}."
@@ -204,7 +204,7 @@ class StoreSaleRequest extends FormRequest
         }
 
         $skuIds = collect($this->input('items', []))
-            ->pluck('product_sku_id')
+            ->pluck('product_variant_id')
             ->filter()
             ->toArray();
 

@@ -183,7 +183,6 @@ export default {
     },
     computed: {
         transformedSales() {
-            debugger
             return this.data.map(sale => ({
                 id: sale.id,
                 client_name: sale.client_name,

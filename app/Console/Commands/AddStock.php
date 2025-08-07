@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\ProductsSku;
+use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use Illuminate\Console\Command;
 
@@ -17,7 +17,7 @@ class AddStock extends Command
         $quantity = (int) $this->argument('quantity');
         $description = $this->option('description');
 
-        $productSku = ProductsSku::find($productSkuId);
+        $productSku = ProductVariant::find($productSkuId);
 
         if (!$productSku) {
             $this->error("❌ Produto SKU ID {$productSkuId} não encontrado!");
