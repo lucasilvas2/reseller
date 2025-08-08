@@ -8,8 +8,8 @@ use App\Http\Resources\StockMovementResource;
 use App\Http\Resources\StockMovementCollection;
 use App\Http\Traits\ServerPaginationTrait;
 use App\Repositories\StockMovementRepository;
-use App\Models\Products;
-use App\Models\ProductsSku;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -23,19 +23,19 @@ class StockMovementController extends Controller
 
     protected StockMovementRepository $stockMovementRepository;
     protected StockMovement $stockMovement;
-    protected Products $products;
-    protected ProductsSku $productsSku;
+    protected Product $product;
+    protected ProductVariant $productVariant;
 
     public function __construct(
         StockMovementRepository $stockMovementRepository,
         StockMovement $stockMovement,
-        Products $products,
-        ProductsSku $productsSku
+        Product $product,
+        ProductVariant $productVariant
     ) {
         $this->stockMovementRepository = $stockMovementRepository;
         $this->stockMovement = $stockMovement;
-        $this->products = $products;
-        $this->productsSku = $productsSku;
+        $this->product = $product;
+        $this->productVariant = $productVariant;
     }
 
     public function index(Request $request): Response
@@ -55,7 +55,7 @@ class StockMovementController extends Controller
     {
         $filters = [
             'type' => $request->get('type'),
-            'product_sku_id' => $request->get('product_sku_id'),
+            'product_variant_id' => $request->get('product_variant_id'),
             'date_from' => $request->get('date_from'),
             'date_to' => $request->get('date_to'),
         ];
@@ -69,8 +69,8 @@ class StockMovementController extends Controller
     private function applyPagination(\Illuminate\Database\Eloquent\Builder $query, Request $request)
     {
         $searchableFields = [
-            'productSku.sku',
-            'productSku.products.name',
+            'productVariant.sku',
+            'productVariant.product.name',
             'type',
             'user.name'
         ];
@@ -102,17 +102,17 @@ class StockMovementController extends Controller
         return collect($paginatedMovements->items())->map(function ($movement) {
             return [
                 'id' => $movement->id,
-                'product_name' => $movement->productSku->products->name ?? 'N/A',
-                'sku' => $movement->productSku->sku ?? 'N/A',
+                'product_name' => $movement->productVariant->product->name ?? 'N/A',
+                'sku' => $movement->productVariant->sku ?? 'N/A',
                 'type' => $movement->type,
                 'type_label' => ucfirst($movement->type),
                 'quantity' => $movement->quantity,
                 'user_name' => $movement->user->name ?? 'N/A',
                 'created_at' => $movement->created_at,
                 'created_at_formatted' => $movement->created_at->format('M d, Y H:i'),
-                'cost_price' => $movement->productSku->cost_price ?? 0,
-                'sale_price' => $movement->productSku->sale_price ?? 0,
-                'total_value' => ($movement->productSku->cost_price ?? 0) * $movement->quantity,
+                'cost_price' => $movement->productVariant->cost_price ?? 0,
+                'sale_price' => $movement->productVariant->sale_price ?? 0,
+                'total_value' => ($movement->productVariant->cost_price ?? 0) * $movement->quantity,
                 // Keep original data for actions
                 '_original' => $movement
             ];
@@ -130,14 +130,14 @@ class StockMovementController extends Controller
         // Add custom filters to response
         $response['filters'] = array_merge($response['filters'], [
             'type' => $request->get('type'),
-            'product_sku_id' => $request->get('product_sku_id'),
+            'product_variant_id' => $request->get('product_variant_id'),
             'date_from' => $request->get('date_from'),
             'date_to' => $request->get('date_to'),
         ]);
 
         // Add additional data
         $response['products'] = $this->getProductsForFilter();
-        $response['product_skus'] = $this->getProductSkusForFilter();
+        $response['product_variants'] = $this->getProductVariantsForFilter();
 
         return $response;
     }
@@ -147,33 +147,33 @@ class StockMovementController extends Controller
      */
     private function getProductsForFilter(): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->products->where('store_id', Auth::user()->store_id)
+        return $this->product->where('store_id', Auth::user()->store_id)
             ->select('id', 'name')
             ->get();
     }
 
     /**
-     * Get product SKUs list for filter dropdown
+     * Get product variants list for filter dropdown
      */
-    private function getProductSkusForFilter(): \Illuminate\Support\Collection
+    private function getProductVariantsForFilter(): \Illuminate\Support\Collection
     {
-        return $this->productsSku->where('store_id', Auth::user()->store_id)
-            ->with('products:id,name')
+        return $this->productVariant->where('store_id', Auth::user()->store_id)
+            ->with('product:id,name')
             ->select('id', 'product_id', 'sku')
             ->get()
-            ->map(function ($sku) {
+            ->map(function ($variant) {
                 return [
-                    'id' => $sku->id,
-                    'sku' => $sku->sku,
-                    'product_name' => $sku->products->name ?? 'N/A',
-                    'display_name' => ($sku->products->name ?? 'N/A') . ' - ' . $sku->sku
+                    'id' => $variant->id,
+                    'sku' => $variant->sku,
+                    'product_name' => $variant->product->name ?? 'N/A',
+                    'display_name' => ($variant->product->name ?? 'N/A') . ' - ' . $variant->sku
                 ];
             });
     }
 
     public function create(): Response
     {
-        $products = $this->products->where('store_id', Auth::user()->store_id)->get();
+        $products = $this->product->where('store_id', Auth::user()->store_id)->get();
         return Inertia::render('App/Stocks/Movements/Create', compact('products'));
     }
 
@@ -181,7 +181,7 @@ class StockMovementController extends Controller
     {
 
         // Find or create product SKU
-        $productSku = $this->productsSku->firstOrCreate([
+        $productVariant = $this->productVariant->firstOrCreate([
             'product_id' => $request->product_id,
             'sku' => $request->sku,
             'store_id' => Auth::user()->store_id,
@@ -193,7 +193,7 @@ class StockMovementController extends Controller
 
         // Create movement
         $this->stockMovement->create([
-            'product_sku_id' => $productSku->id,
+            'product_variant_id' => $productVariant->id,
             'quantity' => $request->quantity,
             'type' => $request->type,
             'user_id' => Auth::id(),
@@ -208,7 +208,7 @@ class StockMovementController extends Controller
     {
         $movement = $this->stockMovement->where('id', $id)
             ->where('store_id', Auth::user()->store_id)
-            ->with(['productSku.products', 'user'])
+            ->with(['productVariant.products', 'user'])
             ->firstOrFail();
 
         return Inertia::render('App/Stocks/Movements/Show', compact('movement'));
@@ -218,10 +218,10 @@ class StockMovementController extends Controller
     {
         $movement = $this->stockMovement->where('id', $id)
             ->where('store_id', Auth::user()->store_id)
-            ->with('productSku.products')
+            ->with('productVariant.products')
             ->firstOrFail();
 
-        $products = $this->products->where('store_id', Auth::user()->store_id)->get();
+        $products = $this->product->where('store_id', Auth::user()->store_id)->get();
 
         return Inertia::render('App/Stocks/Movements/Edit', compact('movement', 'products'));
     }
@@ -230,7 +230,7 @@ class StockMovementController extends Controller
     {
         $movement = $this->stockMovement->where('id', $id)
             ->where('store_id', Auth::user()->store_id)
-            ->with('productSku')
+            ->with('productVariant')
             ->firstOrFail();
 
         $movement->update([
@@ -273,7 +273,7 @@ class StockMovementController extends Controller
     {
         $movement = $this->stockMovement->where('id', $id)
             ->where('store_id', Auth::user()->store_id)
-            ->with(['productSku.products', 'user'])
+            ->with(['productVariant.products', 'user'])
             ->firstOrFail();
 
         return new StockMovementResource($movement);
@@ -285,7 +285,7 @@ class StockMovementController extends Controller
     public function apiStore(StoreStockMovementRequest $request): StockMovementResource
     {
         // Find or create product SKU
-        $productSku = $this->productsSku->firstOrCreate([
+        $productVariant = $this->productVariant->firstOrCreate([
             'product_id' => $request->product_id,
             'sku' => $request->sku,
             'store_id' => Auth::user()->store_id,
@@ -297,7 +297,7 @@ class StockMovementController extends Controller
 
         // Create movement
         $movement = $this->stockMovement->create([
-            'product_sku_id' => $productSku->id,
+            'product_variant_id' => $productVariant->id,
             'quantity' => $request->quantity,
             'type' => $request->type,
             'description' => $request->description,
@@ -306,7 +306,7 @@ class StockMovementController extends Controller
         ]);
 
         // Load relationships for response
-        $movement->load(['productSku.products', 'user']);
+        $movement->load(['productVariant.products', 'user']);
 
         return new StockMovementResource($movement);
     }
@@ -321,7 +321,7 @@ class StockMovementController extends Controller
             ->firstOrFail();
 
         $movement->update($request->validated());
-        $movement->load(['productSku.products', 'user']);
+        $movement->load(['productVariant.products', 'user']);
 
         return new StockMovementResource($movement);
     }

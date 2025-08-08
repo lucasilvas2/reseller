@@ -28,11 +28,11 @@ class InventoryItemResource extends JsonResource
             // Product information
             'product' => $this->whenLoaded('products', function () {
                 return [
-                    'id' => $this->products->id,
-                    'name' => $this->products->name,
-                    'description' => $this->products->description,
-                    'category' => $this->products->category ?? 'Uncategorized',
-                    'brand' => $this->products->brand,
+                    'id' => $this->product->id,
+                    'name' => $this->product->name,
+                    'description' => $this->product->description,
+                    'category' => $this->product->category ?? 'Uncategorized',
+                    'brand' => $this->product->brand,
                 ];
             }),
 
@@ -144,11 +144,11 @@ class InventoryItemResource extends JsonResource
      */
     private function getDisplayName(): string
     {
-        if (!$this->relationLoaded('products')) {
+        if (!$this->relationLoaded('product')) {
             return $this->sku ?? "Item #{$this->id}";
         }
 
-        $productName = $this->products->name ?? 'Produto Desconhecido';
+        $productName = $this->product->name ?? 'Produto Desconhecido';
         return "{$productName} - {$this->sku}";
     }
 

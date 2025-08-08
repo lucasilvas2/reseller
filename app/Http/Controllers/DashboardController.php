@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Products;
-use App\Models\ProductsSku;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -11,23 +11,26 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    protected ProductsSku $productsSku;
+    protected ProductVariant $productVariant;
     protected StockMovement $stockMovement;
-    protected Products $products;
+    protected Product $product;
 
-    public function __construct(ProductsSku $productsSku, StockMovement $stockMovement, Products $products)
+    public function __construct(ProductVariant $productVariant, StockMovement $stockMovement, Product $product)
     {
-        $this->productsSku = $productsSku;
+        $this->productVariant = $productVariant;
         $this->stockMovement = $stockMovement;
-        $this->products = $products;
+        $this->product = $product;
     }
 
     public function index(): Response
     {
         $user = Auth::user();
-
-        if (!$user->hasRole('dealer') || !$user->store_id) {
+        if (!$user->hasRole('reseller')) {
             return $this->buildGuestDashboard();
+        }
+
+        if (!$user->store_id) {
+            return $this->buildResellerWithoutStoreDashboard();
         }
 
         $storeId = $user->store_id;
@@ -43,7 +46,7 @@ class DashboardController extends Controller
             'trendData' => $trendData,
             'stockDistribution' => $stockDistribution,
             'topProducts' => $topProducts,
-            'isDealer' => true,
+            'isReseller' => true,
         ]));
     }
 
@@ -63,7 +66,28 @@ class DashboardController extends Controller
             'topProducts' => [],
             'currentStockLevel' => 0,
             'maxStockCapacity' => 1000,
-            'isDealer' => false,
+            'isReseller' => false,
+        ]);
+    }
+
+    /**
+     * Build dashboard for reseller users without store assigned
+     */
+    private function buildResellerWithoutStoreDashboard(): Response
+    {
+        return Inertia::render('Dashboard', [
+            'totalProducts' => 0,
+            'lowStockCount' => 0,
+            'outOfStockCount' => 0,
+            'totalMovements' => 0,
+            'recentMovements' => [],
+            'trendData' => [],
+            'stockDistribution' => [],
+            'topProducts' => [],
+            'currentStockLevel' => 0,
+            'maxStockCapacity' => 1000,
+            'isReseller' => true,
+            'needsStoreAssignment' => true,
         ]);
     }
 
@@ -72,7 +96,7 @@ class DashboardController extends Controller
      */
     private function calculateDashboardMetrics(int $storeId): array
     {
-        $totalProducts = $this->products->where('store_id', $storeId)->count();
+        $totalProducts = $this->product->where('store_id', $storeId)->count();
         $totalMovements = $this->stockMovement->where('store_id', $storeId)->count();
 
         $inventory = $this->getInventoryData($storeId);
@@ -105,14 +129,14 @@ class DashboardController extends Controller
     private function getRecentMovements(int $storeId): \Illuminate\Support\Collection
     {
         return $this->stockMovement->where('store_id', $storeId)
-            ->with(['productSku.products', 'user'])
+            ->with(['productVariant.product', 'user'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
             ->map(function ($movement) {
                 return [
                     'id' => $movement->id,
-                    'product_name' => $movement->productSku->products->name ?? 'N/A',
+                    'product_name' => $movement->productVariant->product->name ?? 'N/A',
                     'type' => $movement->type,
                     'quantity' => $movement->quantity,
                     'created_at' => $movement->created_at,
@@ -149,23 +173,23 @@ class DashboardController extends Controller
      */
     private function getInventoryData(int $storeId): \Illuminate\Support\Collection
     {
-        return $this->productsSku->where('store_id', $storeId)
-            ->with(['products', 'stockMovements'])
+        return $this->productVariant->where('store_id', $storeId)
+            ->with(['product', 'stockMovements'])
             ->get()
-            ->map(function ($productSku) {
-                $totalIn = $productSku->stockMovements->where('type', 'in')->sum('quantity');
-                $totalOut = $productSku->stockMovements->where('type', 'out')->sum('quantity');
+            ->map(function ($productVariant) {
+                $totalIn = $productVariant->stockMovements->where('type', 'in')->sum('quantity');
+                $totalOut = $productVariant->stockMovements->where('type', 'out')->sum('quantity');
                 $currentStock = $totalIn - $totalOut;
 
                 return [
-                    'id' => $productSku->id,
-                    'product_name' => $productSku->products->name ?? 'N/A',
-                    'sku' => $productSku->sku,
+                    'id' => $productVariant->id,
+                    'product_name' => $productVariant->product->name ?? 'N/A',
+                    'sku' => $productVariant->sku,
                     'current_stock' => $currentStock,
-                    'cost_price' => $productSku->cost_price,
-                    'sale_price' => $productSku->sale_price,
-                    'stock_value' => $currentStock * $productSku->cost_price,
-                    'category' => $productSku->products->category ?? 'Uncategorized',
+                    'cost_price' => $productVariant->cost_price,
+                    'sale_price' => $productVariant->sale_price,
+                    'stock_value' => $currentStock * $productVariant->cost_price,
+                    'category' => $productVariant->product->category ?? 'Uncategorized',
                 ];
             });
     }

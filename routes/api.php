@@ -1,7 +1,11 @@
 <?php
 
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\ClientsController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductVariantController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -10,7 +14,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // Stock Management API Routes
-Route::middleware(['auth:sanctum', 'role:dealer'])->prefix('v1')->group(function () {
+Route::middleware(['auth:sanctum', 'role:reseller'])->prefix('v1')->group(function () {
     // Stock Movements API
     Route::prefix('stock-movements')->name('api.stock-movements.')->group(function () {
         Route::get('/', [StockMovementController::class, 'apiIndex'])->name('index');

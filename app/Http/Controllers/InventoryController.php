@@ -6,8 +6,8 @@ use App\Http\Requests\InventoryFilterRequest;
 use App\Http\Resources\InventoryItemResource;
 use App\Http\Resources\InventoryItemCollection;
 use App\Repositories\InventoryRepository;
-use App\Models\Products;
-use App\Models\ProductsSku;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,17 +15,17 @@ use Inertia\Response;
 class InventoryController extends Controller
 {
     protected InventoryRepository $inventoryRepository;
-    protected ProductsSku $productsSku;
-    protected Products $products;
+    protected ProductVariant $productVariant;
+    protected Product $product;
 
     public function __construct(
         InventoryRepository $inventoryRepository,
-        ProductsSku $productsSku,
-        Products $products
+        ProductVariant $productVariant,
+        Product $product
     ) {
         $this->inventoryRepository = $inventoryRepository;
-        $this->productsSku = $productsSku;
-        $this->products = $products;
+        $this->productVariant = $productVariant;
+        $this->product = $product;
     }
 
     public function index(InventoryFilterRequest $request): Response
@@ -79,7 +79,7 @@ class InventoryController extends Controller
      */
     private function buildBaseQuery(array $filters): \Illuminate\Database\Eloquent\Builder
     {
-        $query = $this->productsSku->where('store_id', Auth::user()->store_id)
+        $query = $this->productVariant->where('store_id', Auth::user()->store_id)
             ->with(['products', 'stockMovements']);
 
         // Search filter
@@ -109,7 +109,7 @@ class InventoryController extends Controller
         return [
             'id' => $productSku->id,
             'product_id' => $productSku->product_id,
-            'product_name' => $productSku->products->name ?? 'N/A',
+            'product_name' => $productSku->product->name ?? 'N/A',
             'sku' => $productSku->sku,
             'barcode' => $productSku->barcode,
             'cost_price' => $productSku->cost_price,
@@ -207,7 +207,7 @@ class InventoryController extends Controller
      */
     public function apiShow($id): InventoryItemResource
     {
-        $productSku = $this->productsSku->where('id', $id)
+        $productSku = $this->productVariant->where('id', $id)
             ->where('store_id', Auth::user()->store_id)
             ->with(['products', 'stockMovements'])
             ->firstOrFail();

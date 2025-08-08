@@ -42,13 +42,13 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Product</label>
                             <select
-                                v-model="localFilters.productSkuId"
+                                v-model="localFilters.productVariantId"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                                 @change="applyFilters"
                             >
                                 <option value="">All Products</option>
                                 <option
-                                    v-for="sku in product_skus"
+                                    v-for="sku in product_variants"
                                     :key="sku.id"
                                     :value="sku.id"
                                 >
@@ -156,7 +156,7 @@ export default {
             type: Array,
             default: () => []
         },
-        product_skus: {
+        product_variants: {
             type: Array,
             default: () => []
         }
@@ -175,7 +175,7 @@ export default {
             ],
             localFilters: {
                 type: this.filters.type || '',
-                productSkuId: this.filters.product_sku_id || '',
+                productVariantId: this.filters.product_variant_id || '',
                 dateFrom: this.filters.date_from || '',
                 dateTo: this.filters.date_to || '',
             },
@@ -226,7 +226,7 @@ export default {
             const params = {
                 page: 1,
                 type: this.localFilters.type || undefined,
-                product_sku_id: this.localFilters.productSkuId || undefined,
+                product_variant_id: this.localFilters.productVariantId || undefined,
                 date_from: this.localFilters.dateFrom || undefined,
                 date_to: this.localFilters.dateTo || undefined,
             };
@@ -246,7 +246,7 @@ export default {
         resetFilters() {
             this.localFilters = {
                 type: '',
-                productSkuId: '',
+                productVariantId: '',
                 dateFrom: '',
                 dateTo: '',
             };

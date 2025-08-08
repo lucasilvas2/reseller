@@ -18,7 +18,7 @@ class AdminUserTest extends TestCase
     use RefreshDatabase;
 
     public function test_the_index_method_return_reponse_correct(): void{
-        $role = Role::create(['name' => 'dealer']);
+        $role = Role::create(['name' => 'reseller']);
         $adminRole = Role::create(['name' => 'admin']);
 
         // Create permissions
@@ -49,15 +49,15 @@ class AdminUserTest extends TestCase
         $response->assertInertia(function ($page) use ($adminRole){
            $page->component('Admin/Users/Index')
                ->has('users', 3) // Ajustado para 3 usuários (apenas os dealers criados)
-               ->where('users.0.roles.0.name', 'dealer')
-               ->where('users.1.roles.0.name', 'dealer')
-               ->where('users.2.roles.0.name', 'dealer');
+               ->where('users.0.roles.0.name', 'reseller')
+               ->where('users.1.roles.0.name', 'reseller')
+               ->where('users.2.roles.0.name', 'reseller');
         });
     }
 
     public function test_store_method_create_user_and_assigns_role()
     {
-        $role = Role::create(['name' => 'dealer']);
+        $role = Role::create(['name' => 'reseller']);
         $adminRole = Role::create(['name' => 'admin']);
 
         // Create permissions
@@ -93,12 +93,12 @@ class AdminUserTest extends TestCase
 
         $user = User::where('email', 'john.doe@example.com')->first();
 
-        $this->assertTrue($user->hasRole('dealer'));
+        $this->assertTrue($user->hasRole('reseller'));
     }
 
     public function test_store_method_validates_request_data()
     {
-        $role = Role::create(['name' => 'dealer']);
+        $role = Role::create(['name' => 'reseller']);
         $adminRole = Role::create(['name' => 'admin']);
 
         // Create permissions

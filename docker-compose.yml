@@ -10,19 +10,42 @@ services:
             - "3326:3306"
         volumes:
             - mysql-data:/var/lib/mysql:rw
+
     localstack:
         container_name: "localstack"
-        image: localstack/localstack:1.0.4
+        image: localstack/localstack:3.0
         ports:
             - "4566:4566"
         environment:
+            - DEBUG=1
             - DOCKER_HOST=unix:///var/run/docker.sock
             - DEFAULT_REGION=us-east-1
             - AWS_ACCESS_KEY_ID=test
             - AWS_SECRET_ACCESS_KEY=test
             - AWS_DEFAULT_REGION=us-east-1
+            - SERVICES=sqs
+            - START_WEB=0
         volumes:
             - "/var/run/docker.sock:/var/run/docker.sock"
+
+    redis:
+        image: redis:7.2-alpine
+        container_name: "dealer-redis"
+        ports:
+            - "6380:6379"
+        environment:
+            - REDIS_PASSWORD=
+        command: redis-server --appendonly yes --requirepass ""
+        volumes:
+            - redis-data:/data:rw
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
     elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
         environment:
@@ -33,6 +56,8 @@ services:
             - "9300:9300"
         volumes:
             - esdata:/usr/share/elasticsearch/data
+
 volumes:
     mysql-data:
+    redis-data:
     esdata:

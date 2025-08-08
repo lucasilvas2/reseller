@@ -17,7 +17,8 @@ class ClientFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'user_id' => 1, // Will be overridden in tests
+            'store_id' => 1, // Will be overridden in tests
         ];
     }
 }

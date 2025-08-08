@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sale_id')->constrained('sales');
-            $table->foreignId('product_sku_id')->constrained('products_skus');
+            $table->foreignId('product_variant_id')->constrained('product_variants');
             $table->integer('quantity');
             $table->decimal('unit_price', 10, 2);
             $table->decimal('total_price', 10, 2);
-            $table->enum('status', ['pending', 'completed', 'canceled'])->default('pending');
+            $table->enum('status', ['pending', 'processing', 'completed', 'failed'])->default('pending');
             $table->timestamps();
             $table->softDeletes();
         });

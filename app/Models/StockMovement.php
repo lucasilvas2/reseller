@@ -21,13 +21,64 @@ class StockMovement extends Model
         'sale_id',
     ];
 
+    public function productVariant()
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    // Alias para compatibilidade (remover após refatoração completa)
     public function productSku()
     {
-        return $this->belongsTo(ProductsSku::class, 'product_sku_id');
+        return $this->productVariant();
     }
 
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function sale()
+    {
+        return $this->belongsTo(Sale::class, 'sale_id');
+    }
+
+    public function orderItem()
+    {
+        return $this->belongsTo(OrderItem::class, 'order_item_id');
+    }
+
+    public function store()
+    {
+        return $this->belongsTo(Store::class, 'store_id');
+    }
+
+    /**
+     * 🔄 Invalidar cache de estoque quando movimento é criado/atualizado
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($stockMovement) {
+            $stockMovement->invalidateProductStockCache();
+        });
+
+        static::updated(function ($stockMovement) {
+            $stockMovement->invalidateProductStockCache();
+        });
+
+        static::deleted(function ($stockMovement) {
+            $stockMovement->invalidateProductStockCache();
+        });
+    }
+
+    /**
+     * 🗑️ Invalidar cache do produto relacionado
+     */
+    private function invalidateProductStockCache(): void
+    {
+        if ($this->productSku) {
+            $this->productSku->invalidateStockCache();
+        }
     }
 }

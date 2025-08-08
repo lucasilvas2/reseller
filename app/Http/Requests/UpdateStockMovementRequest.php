@@ -12,7 +12,7 @@ class UpdateStockMovementRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Auth::check() && Auth::user()->hasRole('dealer');
+        return Auth::check() && Auth::user()->hasRole('reseller');
     }
 
     /**

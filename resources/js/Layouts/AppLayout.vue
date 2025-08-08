@@ -72,7 +72,7 @@ const logout = () => {
                                 </NavLink>
                             </div>
 
-                            <template v-if="hasRole('dealer')">
+                            <template v-if="hasRole('reseller')">
                                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                     <NavLink :href="route('clients.index')" :active="route().current('clients.index')">
                                         Clients
@@ -115,10 +115,16 @@ const logout = () => {
                                 </div>
                             </template>
 
+                            <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                <NavLink :href="route('sales.index')" :active="route().current('sales.index')">
+                                    Sales
+                                </NavLink>
+                            </div>
+
                             <template v-if="hasRole('user')">
                                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                    <NavLink :href="route('dealers.index')" :active="route().current('dealers.index')">
-                                        Dealers
+                                    <NavLink :href="route('stores.index')" :active="route().current('stores.index')">
+                                        Stores
                                     </NavLink>
                                 </div>
                             </template>

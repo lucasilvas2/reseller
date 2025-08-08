@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Products;
-use App\Models\ProductsSku;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\StockMovement;
-use App\Models\Brands;
+use App\Models\Brand;
 use App\Models\Store;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
@@ -25,7 +25,7 @@ class StockSeeder extends Seeder
         }
 
         // Criar algumas marcas
-        $brands = Brands::factory(5)->create();
+        $brands = Brand::factory(5)->create();
 
         // Categorias de produtos
         $categories = ['Electronics', 'Automotive', 'Tools', 'Parts', 'Accessories'];
@@ -34,7 +34,7 @@ class StockSeeder extends Seeder
         $products = [];
         foreach ($categories as $category) {
             for ($i = 1; $i <= 4; $i++) {
-                $products[] = Products::create([
+                $products[] = Product::create([
                     'name' => $category . ' Product ' . $i,
                     'description' => 'Description for ' . $category . ' Product ' . $i,
                     'category' => $category,
@@ -46,7 +46,7 @@ class StockSeeder extends Seeder
 
         // Criar SKUs e movimentos de estoque
         foreach ($products as $index => $product) {
-            $sku = ProductsSku::create([
+            $variant= ProductVariant::create([
                 'product_id' => $product->id,
                 'sku' => 'SKU-' . str_pad($index + 1, 4, '0', STR_PAD_LEFT),
                 'barcode' => 'BAR' . str_pad($index + 1, 10, '0', STR_PAD_LEFT),
@@ -62,7 +62,7 @@ class StockSeeder extends Seeder
                 // Movimento de entrada
                 if (rand(1, 3) === 1) { // 33% chance por dia
                     StockMovement::create([
-                        'product_sku_id' => $sku->id,
+                        'product_variant_id' => $variant->id,
                         'type' => 'in',
                         'quantity' => rand(10, 100),
                         'store_id' => $store->id,
@@ -75,7 +75,7 @@ class StockSeeder extends Seeder
                 // Movimento de saída
                 if (rand(1, 4) === 1) { // 25% chance por dia
                     StockMovement::create([
-                        'product_sku_id' => $sku->id,
+                        'product_variant_id' => $variant->id,
                         'type' => 'out',
                         'quantity' => rand(1, 30),
                         'store_id' => $store->id,
@@ -87,9 +87,9 @@ class StockSeeder extends Seeder
             }
         }
 
-        $this->command->info('Stock data seeded successfully!');
-        $this->command->info('Total Products: ' . count($products));
-        $this->command->info('Total Categories: ' . count($categories));
-        $this->command->info('Store ID: ' . $store->id);
+        $this->command->info('Stock movements created successfully!');
+        $this->command->info("Total Products: {$product->count()}");
+        $this->command->info("Total Variants: {$variant->count()}");
+        $this->command->info("Store ID: {$store->id}");
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Repositories;
 
-use App\Models\ProductsSku;
+use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,12 +13,12 @@ use Illuminate\Support\Facades\DB;
 
 class InventoryRepository
 {
-    protected ProductsSku $productsSku;
+    protected ProductVariant $productVariant;
     protected StockMovement $stockMovement;
 
-    public function __construct(ProductsSku $productsSku, StockMovement $stockMovement)
+    public function __construct(ProductVariant $productVariant, StockMovement $stockMovement)
     {
-        $this->productsSku = $productsSku;
+        $this->productVariant = $productVariant;
         $this->stockMovement = $stockMovement;
     }
 
@@ -27,7 +27,7 @@ class InventoryRepository
      */
     public function getBaseQuery(): Builder
     {
-        return $this->productsSku->where('store_id', Auth::user()->store_id)
+        return $this->productVariant->where('store_id', Auth::user()->store_id)
             ->with(['products', 'stockMovements']);
     }
 
@@ -56,7 +56,7 @@ class InventoryRepository
     /**
      * Find inventory item by ID
      */
-    public function findById(int $id): ?ProductsSku
+    public function findById(int $id): ?ProductVariant
     {
         return $this->getBaseQuery()
             ->where('id', $id)
@@ -66,7 +66,7 @@ class InventoryRepository
     /**
      * Find inventory item by ID or fail
      */
-    public function findByIdOrFail(int $id): ProductsSku
+    public function findByIdOrFail(int $id): ProductVariant
     {
         return $this->getBaseQuery()
             ->where('id', $id)
@@ -146,15 +146,15 @@ class InventoryRepository
     /**
      * Calculate current stock for a product SKU
      */
-    public function calculateCurrentStock(int $productSkuId): int
+    public function calculateCurrentStock(int $productVariantId): int
     {
         $totalIn = $this->stockMovement
-            ->where('product_sku_id', $productSkuId)
+            ->where('product_variant_id', $productVariantId)
             ->where('type', 'in')
             ->sum('quantity');
 
         $totalOut = $this->stockMovement
-            ->where('product_sku_id', $productSkuId)
+            ->where('product_variant_id', $productVariantId)
             ->where('type', 'out')
             ->sum('quantity');
 
@@ -168,53 +168,53 @@ class InventoryRepository
     {
         $inventory = $this->getAll($filters);
 
-        return $inventory->map(function ($productSku) {
-            return $this->buildInventoryItem($productSku);
+        return $inventory->map(function ($productVariant) {
+            return $this->buildInventoryItem($productVariant);
         });
     }
 
     /**
      * Build inventory item with calculations
      */
-    public function buildInventoryItem(ProductsSku $productSku): array
+    public function buildInventoryItem(ProductVariant $productVariant): array
     {
-        $totalIn = $productSku->stockMovements->where('type', 'in')->sum('quantity');
-        $totalOut = $productSku->stockMovements->where('type', 'out')->sum('quantity');
+        $totalIn = $productVariant->stockMovements->where('type', 'in')->sum('quantity');
+        $totalOut = $productVariant->stockMovements->where('type', 'out')->sum('quantity');
         $currentStock = $totalIn - $totalOut;
 
         return [
-            'id' => $productSku->id,
-            'product_id' => $productSku->product_id,
-            'product_name' => $productSku->products->name ?? 'N/A',
-            'sku' => $productSku->sku,
-            'barcode' => $productSku->barcode,
-            'cost_price' => $productSku->cost_price,
-            'sale_price' => $productSku->sale_price,
+            'id' => $productVariant->id,
+            'product_id' => $productVariant->product_id,
+            'product_name' => $productVariant->product->name ?? 'N/A',
+            'sku' => $productVariant->sku,
+            'barcode' => $productVariant->barcode,
+            'cost_price' => $productVariant->cost_price,
+            'sale_price' => $productVariant->sale_price,
             'current_stock' => $currentStock,
             'total_movements_in' => $totalIn,
             'total_movements_out' => $totalOut,
-            'stock_value' => $currentStock * ($productSku->cost_price ?? 0),
-            'potential_revenue' => $currentStock * ($productSku->sale_price ?? 0),
-            'profit_margin' => ($productSku->sale_price ?? 0) - ($productSku->cost_price ?? 0),
-            'profit_margin_percentage' => $this->calculateProfitMarginPercentage($productSku),
-            'last_movement' => $productSku->stockMovements->sortByDesc('created_at')->first()?->created_at,
+            'stock_value' => $currentStock * ($productVariant->cost_price ?? 0),
+            'potential_revenue' => $currentStock * ($productVariant->sale_price ?? 0),
+            'profit_margin' => ($productVariant->sale_price ?? 0) - ($productVariant->cost_price ?? 0),
+            'profit_margin_percentage' => $this->calculateProfitMarginPercentage($productVariant),
+            'last_movement' => $productVariant->stockMovements->sortByDesc('created_at')->first()?->created_at,
             'status' => $this->getStockStatus($currentStock),
             'needs_restock' => $currentStock <= 10,
-            'category' => $productSku->products->category ?? 'Uncategorized',
+            'category' => $productVariant->product->category ?? 'Uncategorized',
         ];
     }
 
     /**
      * Calculate profit margin percentage
      */
-    private function calculateProfitMarginPercentage(ProductsSku $productSku): float
+    private function calculateProfitMarginPercentage(ProductVariant $productVariant): float
     {
-        if (($productSku->cost_price ?? 0) <= 0) {
+        if (($productVariant->cost_price ?? 0) <= 0) {
             return 0;
         }
 
-        $margin = ($productSku->sale_price ?? 0) - ($productSku->cost_price ?? 0);
-        return ($margin / $productSku->cost_price) * 100;
+        $margin = ($productVariant->sale_price ?? 0) - ($productVariant->cost_price ?? 0);
+        return ($margin / $productVariant->cost_price) * 100;
     }
 
     /**

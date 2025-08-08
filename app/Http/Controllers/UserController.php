@@ -26,14 +26,74 @@ class UserController extends Controller
         $this->storeModel = $store;
     }
 
-    public function index(): \Inertia\Response
+    public function index(Request $request): \Inertia\Response
     {
-        $users =  $this->userModel->role('dealer')->get();
-        $users->map(function ($user) {
-           $user->roles = $user->getRoleNames();
+        $query = $this->userModel->role('reseller');
+
+        if($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone_number', 'like', "%{$search}%");
+            });
+        }
+
+        if($request->filled('name')) {
+            $query->where('name', 'like', "%{$request->name}%");
+        }
+
+        if($request->filled('email')) {
+            $query->where('email', 'like', "%{$request->email}%");
+        }
+
+        if($request->filled('date_from')) {
+            $query->where('created_at', '>=', $request->date_from);
+        }
+
+        if($request->filled('date_to')) {
+            $query->where('created_at', '<=', $request->date_to);
+        }
+
+        $sortKey = $request->get('sort', 'created_at');
+        $sortOrder = strtolower($request->get('order', 'desc'));
+        if (!in_array($sortOrder, ['asc', 'desc'])) {
+            $sortOrder = 'desc';
+        }
+
+        if(in_array($sortKey, ['name', 'email', 'phone_number'])) {
+            $query->orderBy($sortKey, $sortOrder);
+        } else {
+            $query->orderBy('created_at', $sortOrder);
+        }
+
+        $perPage = $request->get('perPage', 10);
+        $users = $query->paginate($perPage);
+
+        $transformedData = $users->getCollection()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone_number' => $user->phone_number,
+                'created_at' => $user->created_at->format('Y-m-d H:i:s'),
+                'role' => $user->getRoleNames()->first(),
+                'store' => $user->store ? $user->store->name : null,
+            ];
         });
+
         return Inertia::render('Admin/Users/Index', [
-            'users' => $users,
+            'data' => $transformedData,
+            'filters' => $request->all(['search', 'name', 'email', 'date_from', 'date_to', 'sort', 'order']),
+            'pagination' => [
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'per_page' => $users->perPage(),
+                'total' => $users->total(),
+                'from' => $users->firstItem(),
+                'to' => $users->lastItem(),
+                'links' => [],
+            ],
         ]);
     }
 
