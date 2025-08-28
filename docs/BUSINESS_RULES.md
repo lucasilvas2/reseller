@@ -1,4 +1,4 @@
-# Regras de Negócio - Dealer Management System
+# Regras de Negócio - Reseller Management System
 
 ## 📋 Visão Geral das Regras
 
@@ -19,7 +19,7 @@ Admin (Global)
 ├─ Controle de usuários e permissões
 └─ Auditoria completa
 
-Dealer (Loja)
+Reseller (Loja)
 ├─ Acesso limitado à sua loja
 ├─ Gestão de produtos e estoque
 ├─ Processamento de vendas
@@ -39,7 +39,7 @@ User (Cliente)
  * RN001: Isolamento de Dados por Loja
  * Todos os dados são automaticamente filtrados por store_id
  */
-if (auth()->user()->hasRole('dealer')) {
+if (auth()->user()->hasRole('reseller')) {
     // Aplicar filtro automático
     $query->where('store_id', auth()->user()->store_id);
 }
@@ -67,7 +67,7 @@ public function authorize() {
 ```php
 /**
  * RN004: Convite de Clientes
- * Apenas dealers podem convidar clientes para sua loja
+ * Apenas resellers podem convidar clientes para sua loja
  */
 class InviteClientRule {
     public function validate($email, $storeId) {

@@ -1,23 +1,43 @@
 <template>
-    <AppLayout title="Stock Movements">
+    <AppSidebarLayout title="Stock Movements">
         <template #header>
-            <div class="flex flex-row">
-                <div class="basis-1/2">
-                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                        Stock Movements
-                    </h2>
-                </div>
-                <div class="basis-1/2 flex justify-end space-x-3">
-                    <a :href="route('dashboard')"
-                       class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded text-sm">
-                        Dashboard
-                    </a>
-                    <PrimaryButton type="link" :href="route('stocks.inventory.index')" variant="secondary">
-                        Stock Inventory
-                    </PrimaryButton>
-                    <PrimaryButton type="link" :href="route('stocks.movements.create')">
-                        Add Movement
-                    </PrimaryButton>
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4">
+                    <!-- Breadcrumb e Título -->
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0 flex-1">
+                            <!-- Breadcrumb -->
+                            <nav class="flex mb-2" aria-label="Breadcrumb">
+                                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                                    <li aria-current="page">
+                                        <div class="flex items-center">
+                                            <span class="ml-1 text-sm font-medium text-gray-700 dark:text-gray-300">Movements</span>
+                                        </div>
+                                    </li>
+                                </ol>
+                            </nav>
+
+                            <!-- Título -->
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                                Movements List
+                            </h1>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="ml-4 flex items-center space-x-3">
+                            <PrimaryButton type="link" :href="route('stocks.inventory.index')" variant="secondary">
+                                Stock Inventory
+                            </PrimaryButton>
+                            <PrimaryButton type="link" :href="route('stocks.movements.create')">
+                                Add Movement
+                            </PrimaryButton>
+                        </div>
+                    </div>
+
+                    <!-- Stats Row -->
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-4 gap-4">
+
+                    </div>
                 </div>
             </div>
         </template>
@@ -25,10 +45,10 @@
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Advanced Filters -->
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg mb-6 p-6">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg mb-6 p-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Movement Type</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-white mb-2">Movement Type</label>
                             <select
                                 v-model="localFilters.type"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
@@ -40,24 +60,24 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Product</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-white  mb-2">Product</label>
                             <select
-                                v-model="localFilters.productVariantId"
+                                v-model="localFilters.productId"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                                 @change="applyFilters"
                             >
                                 <option value="">All Products</option>
                                 <option
-                                    v-for="sku in product_variants"
-                                    :key="sku.id"
-                                    :value="sku.id"
+                                    v-for="product in products"
+                                    :key="product.id"
+                                    :value="product.id"
                                 >
-                                    {{ sku.display_name }}
+                                    {{ product.name }}
                                 </option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Date From</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-white  mb-2">Date From</label>
                             <input
                                 v-model="localFilters.dateFrom"
                                 type="date"
@@ -66,7 +86,7 @@
                             />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Date To</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-white  mb-2">Date To</label>
                             <input
                                 v-model="localFilters.dateTo"
                                 type="date"
@@ -78,7 +98,7 @@
                     <div class="mt-4 flex justify-end">
                         <button
                             @click="resetFilters"
-                            class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold rounded"
+                            class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 dark:text-white  font-bold rounded"
                         >
                             Reset Filters
                         </button>
@@ -124,7 +144,7 @@
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </AppSidebarLayout>
 </template>
 
 <script>
@@ -132,9 +152,11 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import ServerPaginatedTable from "@/Components/ServerPaginatedTable.vue";
 import { router } from "@inertiajs/vue3";
 import AppLayout from "@/Layouts/AppLayout.vue";
+import AppSidebarLayout from "@/Layouts/AppSidebarLayout.vue";
 
 export default {
     components: {
+        AppSidebarLayout,
         AppLayout,
         PrimaryButton,
         ServerPaginatedTable,
@@ -155,10 +177,6 @@ export default {
         products: {
             type: Array,
             default: () => []
-        },
-        product_variants: {
-            type: Array,
-            default: () => []
         }
     },
     data() {
@@ -175,7 +193,7 @@ export default {
             ],
             localFilters: {
                 type: this.filters.type || '',
-                productVariantId: this.filters.product_variant_id || '',
+                productId: this.filters.product_id || '',
                 dateFrom: this.filters.date_from || '',
                 dateTo: this.filters.date_to || '',
             },
@@ -213,7 +231,6 @@ export default {
                 total_value: this.formatPrice(movement.total_value),
                 user_name: movement.user_name,
                 created_at_formatted: movement.created_at_formatted,
-                // Keep original for actions
                 _original: movement
             }));
         }
@@ -226,7 +243,7 @@ export default {
             const params = {
                 page: 1,
                 type: this.localFilters.type || undefined,
-                product_variant_id: this.localFilters.productVariantId || undefined,
+                product_id: this.localFilters.productId || undefined,
                 date_from: this.localFilters.dateFrom || undefined,
                 date_to: this.localFilters.dateTo || undefined,
             };
@@ -246,7 +263,7 @@ export default {
         resetFilters() {
             this.localFilters = {
                 type: '',
-                productVariantId: '',
+                productId: '',
                 dateFrom: '',
                 dateTo: '',
             };

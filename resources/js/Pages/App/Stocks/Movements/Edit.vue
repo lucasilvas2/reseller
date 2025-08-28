@@ -3,10 +3,11 @@ import AdminLayout from "@/Layouts/AdminLayout.vue";
 import TextInput from "@/Components/TextInput.vue";
 import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
-import {useForm} from "@inertiajs/vue3";
+import {Link, useForm} from "@inertiajs/vue3";
 import SelectInput from "@/Components/SelectInput.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
+import AppSidebarLayout from "@/Layouts/AppSidebarLayout.vue";
 
 const props = defineProps({
     movement: {
@@ -20,12 +21,12 @@ const props = defineProps({
 });
 
 const form = useForm({
-    barcode: props.movement.product_variant?.barcode || '',
-    sku: props.movement.product_variant?.sku || '',
+    barcode: props.movement.product?.barcode || '',
+    sku: props.movement.product?.sku || '',
     quantity: props.movement.quantity || '',
-    cost_price: props.movement.product_variant?.cost_price || null,
-    sale_price: props.movement.product_variant?.sale_price || null,
-    product_id: props.movement.product_variant?.product_id || null,
+    cost_price: props.movement.product?.cost_price || null,
+    sale_price: props.movement.product?.sale_price || null,
+    product_id: props.movement.product_id || null,
     errors: {},
 });
 
@@ -42,16 +43,51 @@ const submitForm = () => {
 </script>
 
 <template>
-    <AppLayout title="Edit Stock Movement">
+    <AppSidebarLayout title="Edit Stock Movement">
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Edit Movement #{{ movement.id }}
-                </h2>
-                <a :href="route('stocks.movements.index')"
-                   class="text-gray-600 hover:text-gray-900 text-sm">
-                    ← Back to List
-                </a>
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4">
+                    <!-- Breadcrumb e Título -->
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0 flex-1">
+                            <!-- Breadcrumb -->
+                            <nav class="flex mb-2" aria-label="Breadcrumb">
+                                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                                    <li class="inline-flex items-center">
+                                        <Link :href="route('stocks.movements.index')" class="text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                            Movements
+                                        </Link>
+                                    </li>
+                                    <li aria-current="page">
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            <span class="ml-1 text-sm font-medium text-gray-700 dark:text-gray-300">Edit</span>
+                                        </div>
+                                    </li>
+                                </ol>
+                            </nav>
+
+                            <!-- Título -->
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                                Edit Movement #{{ movement.id }}
+                            </h1>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="ml-4 flex items-center space-x-3">
+                            <a :href="route('stocks.movements.index')"
+                               class="text-gray-600 hover:text-gray-900 text-sm">
+                                ← Back to List
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Stats Row -->
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    </div>
+                </div>
             </div>
         </template>
 
@@ -158,7 +194,7 @@ const submitForm = () => {
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </AppSidebarLayout>
 </template>
 
 <script>

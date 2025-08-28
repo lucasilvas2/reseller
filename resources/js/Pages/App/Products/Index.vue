@@ -1,16 +1,35 @@
 <template>
-    <AppLayout title="Products">
+    <AppSidebarLayout title="Products">
         <template #header>
-            <div class="flex flex-row">
-                <div class="basis-1/2">
-                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                        Products
-                    </h2>
-                </div>
-                <div class="basis-1/2 flex justify-end">
-                    <PrimaryButton type="link" :href="route('products.create')">
-                        Add Product
-                    </PrimaryButton>
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4">
+                    <!-- Breadcrumb e Título -->
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0 flex-1">
+                            <!-- Breadcrumb -->
+                            <nav class="flex mb-2" aria-label="Breadcrumb">
+                                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                                    <li aria-current="page">
+                                        <div class="flex items-center">
+                                            <span class="ml-1 text-sm font-medium text-gray-700 dark:text-gray-300">Products</span>
+                                        </div>
+                                    </li>
+                                </ol>
+                            </nav>
+
+                            <!-- Título -->
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                                Product List
+                            </h1>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="ml-4 flex items-center space-x-3">
+                            <PrimaryButton type="link" :href="route('products.create')">
+                                Add Product
+                            </PrimaryButton>
+                        </div>
+                    </div>
                 </div>
             </div>
         </template>
@@ -109,7 +128,7 @@
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </AppSidebarLayout>
 </template>
 
 <script>
@@ -117,9 +136,11 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import ServerPaginatedTable from "@/Components/ServerPaginatedTable.vue";
 import { router } from "@inertiajs/vue3";
 import AppLayout from "@/Layouts/AppLayout.vue";
+import AppSidebarLayout from "@/Layouts/AppSidebarLayout.vue";
 
 export default {
     components: {
+        AppSidebarLayout,
         AppLayout,
         PrimaryButton,
         ServerPaginatedTable,
@@ -140,6 +161,10 @@ export default {
         brands: {
             type: Array,
             default: () => []
+        },
+        pageTitle: {
+            type: String,
+            default: 'Products'
         }
     },
     data() {
@@ -170,7 +195,8 @@ export default {
                     icon: 'fas fa-trash',
                     type: 'danger'
                 }
-            ]
+            ],
+            pageTitle: 'Products',
         };
     },
     computed: {
@@ -181,7 +207,6 @@ export default {
                 description: product.description,
                 brand_name: product.brand_name,
                 created_at_formatted: product.created_at_formatted,
-                // Keep original for actions
                 _original: product
             }));
         }

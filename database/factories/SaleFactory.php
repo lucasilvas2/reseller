@@ -17,9 +17,9 @@ class SaleFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => 1, // Will be overridden in tests
-            'client_id' => 1, // Will be overridden in tests
-            'store_id' => 1, // Will be overridden in tests
+            'user_id' => 1,
+            'client_id' => 1,
+            'store_id' => 1,
             'total_amount' => $this->faker->randomFloat(2, 50, 1000),
             'notes' => $this->faker->optional()->text(200),
             'status' => $this->faker->randomElement(['pending', 'processing', 'completed', 'failed', 'canceled']),

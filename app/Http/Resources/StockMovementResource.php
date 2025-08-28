@@ -16,7 +16,7 @@ class StockMovementResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'product_sku_id' => $this->product_sku_id,
+            'product_id' => $this->product_id,
             'quantity' => $this->quantity,
             'type' => $this->type,
             'type_label' => $this->getTypeLabel(),
@@ -31,19 +31,20 @@ class StockMovementResource extends JsonResource
             'created_at_human' => $this->created_at->diffForHumans(),
 
             // Relationships
-            'product_sku' => $this->whenLoaded('productSku', function () {
+            'product' => $this->whenLoaded('product', function () {
                 return [
-                    'id' => $this->productSku->id,
-                    'sku' => $this->productSku->sku,
-                    'barcode' => $this->productSku->barcode,
-                    'cost_price' => $this->productSku->cost_price,
-                    'sale_price' => $this->productSku->sale_price,
-                    'product' => $this->whenLoaded('productSku.products', function () {
+                    'id' => $this->product->id,
+                    'name' => $this->product->name,
+                    'description' => $this->product->description,
+                    'category' => $this->product->category,
+                    'sku' => $this->product->sku,
+                    'barcode' => $this->product->barcode,
+                    'cost_price' => $this->product->cost_price,
+                    'sale_price' => $this->product->sale_price,
+                    'brand' => $this->whenLoaded('product.brand', function () {
                         return [
-                            'id' => $this->productSku->product->id,
-                            'name' => $this->productSku->product->name,
-                            'description' => $this->productSku->product->description,
-                            'category' => $this->productSku->product->category,
+                            'id' => $this->product->brand->id,
+                            'name' => $this->product->brand->name,
                         ];
                     }),
                 ];

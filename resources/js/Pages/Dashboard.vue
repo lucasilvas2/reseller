@@ -1,5 +1,6 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import AppSidebarLayout from '@/Layouts/AppSidebarLayout.vue';
 import SummaryCard from '@/Components/Stock/SummaryCard.vue';
 import MovementsTrendChart from '@/Components/Charts/MovementsTrendChart.vue';
 import StockDistributionChart from '@/Components/Charts/StockDistributionChart.vue';
@@ -39,16 +40,26 @@ const handleMovementAction = ({ action, row }) => {
 </script>
 
 <template>
-    <AppLayout title="Dashboard">
+    <AppSidebarLayout title="Dashboard">
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ isReseller ? 'Stock Dashboard' : 'Dashboard' }}
-            </h2>
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4">
+                    <!-- Breadcrumb e Título -->
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0 flex-1">
+                            <!-- Título -->
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                                {{ isReseller ? 'Stock Dashboard' : 'Dashboard' }}
+                            </h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </template>
 
         <div class="py-6">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Conteúdo para Dealers -->
+                <!-- Conteúdo para Resellers -->
                 <div v-if="isReseller && !needsStoreAssignment">
                     <!-- Cards de Resumo -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -159,7 +170,7 @@ const handleMovementAction = ({ action, row }) => {
                     <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
                         <div class="p-6 sm:px-20 bg-white border-b border-gray-200">
                             <div class="mt-8 text-2xl">
-                                Welcome to the Dealer Management System
+                                Welcome to the Reseller Management System
                             </div>
 
                             <div class="mt-6 text-gray-500">
@@ -203,12 +214,12 @@ const handleMovementAction = ({ action, row }) => {
                     </div>
                 </div>
 
-                <!-- Conteúdo para Usuários Não-Dealers -->
+                <!-- Conteúdo para Usuários Não-Resellers -->
                 <div v-else>
                     <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
                         <div class="p-6 sm:px-20 bg-white border-b border-gray-200">
                             <div class="mt-8 text-2xl">
-                                Welcome to the Dealer Management System
+                                Welcome to the Reseller Management System
                             </div>
 
                             <div class="mt-6 text-gray-500">
@@ -253,5 +264,5 @@ const handleMovementAction = ({ action, row }) => {
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </AppSidebarLayout>
 </template>

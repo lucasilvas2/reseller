@@ -8,7 +8,6 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ProductVariantController;
 use App\Http\Controllers\PublicStoresController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\UserController;
@@ -49,13 +48,6 @@ Route::middleware([
             'update' => 'admin.brands.update',
             'destroy' => 'admin.brands.destroy'
         ]);
-
-        // Product Variants Management
-        Route::resource('product-variants', ProductVariantController::class);
-
-        // Nested Product Variants (E-commerce Pattern)
-        Route::resource('products.variants', ProductVariantController::class)
-            ->except(['index']); // Variants are always nested under products
 
         // Inventory Management
         Route::prefix('inventory')->name('inventory.')->group(function () {

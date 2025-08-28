@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\OrderItem;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\DB;
@@ -22,19 +22,25 @@ class SyncSaleProcessor implements \App\Contracts\SaleProcessor
         try {
             // ✅ Transação com timeout para evitar locks longos
             DB::transaction(function () use ($sale) {
-                // Processar cada OrderItem individualmente
-                foreach ($sale->orderItems()->pending()->get() as $item) {
+                // Processar cada OrderItem individualmente (sem status granular)
+                foreach ($sale->orderItems as $item) {
                     $this->processOrderItem($item);
                 }
             }, 5); // 5 tentativas máximo
 
-            // Atualizar status da venda baseado nos itens
-            $finalStatus = $sale->updateStatusFromItems();
+            // Verificar se houve falhas usando abordagem híbrida
+            if ($sale->hasUnresolvedFailures()) {
+                $finalStatus = 'failed';
+            } else {
+                $finalStatus = 'completed';
+            }
+
+            $sale->update(['status' => $finalStatus]);
 
             Log::info('Sale processed synchronously', [
                 'sale_id' => $sale->id,
                 'final_status' => $finalStatus,
-                'items_summary' => $sale->getItemsStatusSummary()
+                'processing_summary' => $sale->getProcessingSummary()
             ]);
 
             return $finalStatus;
@@ -44,7 +50,7 @@ class SyncSaleProcessor implements \App\Contracts\SaleProcessor
                 'error' => $e->getMessage()
             ]);
 
-            $sale->update(['status' => 'failed']);  // ✅ Usar 'failed' em vez de 'canceled'
+            $sale->update(['status' => 'failed']);
             return 'failed';
         }
     }
@@ -88,26 +94,34 @@ class SyncSaleProcessor implements \App\Contracts\SaleProcessor
     private function processOrderItem(OrderItem $item): void
     {
         try {
-            $item->update(['status' => 'processing']);
-
-            // 🔒 LOCK no ProductVariant para prevenir race conditions
-            $productVariant = ProductVariant::where('id', $item->product_variant_id)
+            // 🔒 LOCK no Product para prevenir race conditions
+            $product = Product::where('id', $item->product_id)
                 ->lockForUpdate()
                 ->first();
 
-            if (!$productVariant) {
-                throw new \Exception('Product Variant not found for item ID: ' . $item->id);
+            if (!$product) {
+                throw new \Exception('Product not found for item ID: ' . $item->id);
             }
 
             // ✅ Calcular estoque atual baseado em StockMovements
-            $availableStock = $productVariant->getCurrentStock();
+            $availableStock = $product->getCurrentStock();
             if ($availableStock < $item->quantity) {
-                throw new \Exception("Estoque insuficiente. Disponível: {$availableStock}, Solicitado: {$item->quantity}");
+                // Create failure record using hybrid approach
+                $item->sale->createFailure(
+                    $item,
+                    'insufficient_stock',
+                    "Estoque insuficiente. Disponível: {$availableStock}, Solicitado: {$item->quantity}",
+                    ['available' => $availableStock, 'requested' => $item->quantity]
+                );
+
+                // Set sale to failed
+                $item->sale->update(['status' => 'failed']);
+                return;
             }
 
-            // ✅ Criar movimento de estoque de saída (estrutura correta)
+            // ✅ Criar movimento de estoque de saída (estrutura consolidada)
             StockMovement::create([
-                'product_variant_id' => $item->product_variant_id,
+                'product_id' => $item->product_id,
                 'store_id' => $item->sale->store_id,
                 'type' => 'out',
                 'quantity' => $item->quantity,
@@ -117,21 +131,25 @@ class SyncSaleProcessor implements \App\Contracts\SaleProcessor
                 'order_item_id' => $item->id,
             ]);
 
-            $item->update(['status' => 'completed']);
-
             Log::info('OrderItem processed successfully', [
                 'order_item_id' => $item->id,
                 'sale_id' => $item->sale_id,
-                'product_variant_id' => $item->product_variant_id,
+                'product_id' => $item->product_id,
                 'quantity' => $item->quantity
             ]);
 
         }
         catch (\Exception $e) {
-            $item->update([
-                'status' => 'failed',
-                'error_message' => $e->getMessage()
-            ]);
+            // Create failure record using hybrid approach
+            $item->sale->createFailure(
+                $item,
+                'processing_error',
+                $e->getMessage(),
+                ['error_code' => $e->getCode()]
+            );
+
+            // Set sale to failed
+            $item->sale->update(['status' => 'failed']);
 
             Log::error('OrderItem processing failed', [
                 'order_item_id' => $item->id,

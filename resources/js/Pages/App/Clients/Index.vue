@@ -1,16 +1,42 @@
 <template>
-    <AppLayout title="Clients">
+    <AppSidebarLayout title="Clients">
         <template #header>
-            <div class="flex flex-row">
-                <div class="basis-1/2">
-                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                        Clients
-                    </h2>
-                </div>
-                <div class="basis-1/2 flex justify-end">
-                    <PrimaryButton type="link" :href="route('clients.create')">
-                        Add Client
-                    </PrimaryButton>
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4">
+                    <!-- Breadcrumb e Título -->
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0 flex-1">
+                            <!-- Breadcrumb -->
+                            <nav class="flex mb-2" aria-label="Breadcrumb">
+                                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                                    <li aria-current="page">
+                                        <div class="flex items-center">
+                                            <span class="ml-1 text-sm font-medium text-gray-700 dark:text-gray-300">Clients</span>
+                                        </div>
+                                    </li>
+                                </ol>
+                            </nav>
+
+                            <!-- Título -->
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                                Clients List
+                            </h1>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="ml-4 flex items-center space-x-3">
+                            <Link
+                                type="button"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                                :href="route('clients.create')"
+                            >
+                                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Create
+                            </Link>
+                        </div>
+                    </div>
                 </div>
             </div>
         </template>
@@ -102,17 +128,20 @@
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </AppSidebarLayout>
 </template>
 
 <script>
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import ServerPaginatedTable from "@/Components/ServerPaginatedTable.vue";
-import { router } from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
 import AppLayout from "@/Layouts/AppLayout.vue";
+import AppSidebarLayout from "@/Layouts/AppSidebarLayout.vue";
 
 export default {
     components: {
+        Link,
+        AppSidebarLayout,
         AppLayout,
         PrimaryButton,
         ServerPaginatedTable,

@@ -1,9 +1,9 @@
-# Guia de Contribuição - Dealer Management System
+# Guia de Contribuição - Reseller Management System
 
 ## 🤝 Como Contribuir
 
 ### Bem-vindo ao Projeto!
-Agradecemos seu interesse em contribuir com o **Dealer Management System**. Este é um projeto Laravel 12 focado em gestão de vendas com processamento assíncrono e arquitetura robusta.
+Agradecemos seu interesse em contribuir com o **Reseller Management System**. Este é um projeto Laravel 12 focado em gestão de vendas com processamento assíncrono e arquitetura robusta.
 
 ## 🏗️ Preparação do Ambiente
 
@@ -17,8 +17,8 @@ Agradecemos seu interesse em contribuir com o **Dealer Management System**. Este
 ### Setup de Desenvolvimento
 ```bash
 # 1. Fork e clone
-git clone https://github.com/your-username/dealer.git
-cd dealer
+git clone https://github.com/your-username/reseller.git
+cd reseller
 
 # 2. Instalar dependências
 composer install
@@ -164,7 +164,7 @@ $this->app->bind(SaleProcessor::class, function ($app) {
 class ProductController extends Controller {
     public function index() {
         $products = Product::when(
-            auth()->user()->hasRole('dealer'),
+            auth()->user()->hasRole('reseller'),
             fn($query) => $query->whereHas('brand.store', 
                 fn($q) => $q->where('id', auth()->user()->store_id)
             )

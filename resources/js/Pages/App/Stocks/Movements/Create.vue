@@ -3,10 +3,11 @@ import AdminLayout from "@/Layouts/AdminLayout.vue";
 import TextInput from "@/Components/TextInput.vue";
 import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
-import {useForm} from "@inertiajs/vue3";
+import {Link, useForm} from "@inertiajs/vue3";
 import SelectInput from "@/Components/SelectInput.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
+import AppSidebarLayout from "@/Layouts/AppSidebarLayout.vue";
 
 const form = useForm({
     barcode: '',
@@ -32,45 +33,56 @@ const submitForm = () => {
 </script>
 
 <template>
-    <AppLayout title="Products SKU">
+    <AppSidebarLayout title="Movements Create">
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Create
-            </h2>
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4">
+                    <!-- Breadcrumb e Título -->
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0 flex-1">
+                            <!-- Breadcrumb -->
+                            <nav class="flex mb-2" aria-label="Breadcrumb">
+                                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                                    <li class="inline-flex items-center">
+                                        <Link :href="route('stocks.movements.index')" class="text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                            Movements
+                                        </Link>
+                                    </li>
+                                    <li aria-current="page">
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            <span class="ml-1 text-sm font-medium text-gray-700 dark:text-gray-300">Create</span>
+                                        </div>
+                                    </li>
+                                </ol>
+                            </nav>
+
+                            <!-- Título -->
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                                Movement Create
+                            </h1>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="ml-4 flex items-center space-x-3">
+
+                        </div>
+                    </div>
+
+                    <!-- Stats Row -->
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    </div>
+                </div>
+            </div>
         </template>
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
-
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-6">
                     <form @submit.prevent="submitForm">
                         <div class="md:grid md:grid-cols-2 md:gap-6">
-                            <div>
-                                <InputLabel for="barcode" value="Código de barra"/>
-                                <TextInput
-                                    id="sale_price"
-                                    v-model="form.barcode"
-                                    type="text"
-                                    class="mt-1 block w-full"
-                                    required
-                                    autofocus
-                                    autocomplete="barcode"
-                                />
-                                <InputError class="mt-2" :message="form.errors.barcode"/>
-                            </div>
-                            <div>
-                                <InputLabel for="sku" value="SKU"/>
-                                <TextInput
-                                    id="sku"
-                                    v-model="form.sku"
-                                    type="text"
-                                    class="mt-1 block w-full"
-                                    required
-                                    autofocus
-                                    autocomplete="sku"
-                                />
-                                <InputError class="mt-2" :message="form.errors.sku"/>
-                            </div>
                             <div>
                                 <InputLabel for="cost_price" value="Preço Compra"/>
                                 <TextInput
@@ -83,19 +95,6 @@ const submitForm = () => {
                                     autocomplete="cost_price"
                                 />
                                 <InputError class="mt-2" :message="form.errors.cost_price"/>
-                            </div>
-                            <div>
-                                <InputLabel for="sale_price" value="Preço Venda"/>
-                                <TextInput
-                                    id="sale_price"
-                                    v-model="form.sale_price"
-                                    type="text"
-                                    class="mt-1 block w-full"
-                                    required
-                                    autofocus
-                                    autocomplete="sale_price"
-                                />
-                                <InputError class="mt-2" :message="form.errors.sale_price"/>
                             </div>
                             <div>
                                 <InputLabel for="quantity" value="Quantidade"/>
@@ -144,7 +143,7 @@ const submitForm = () => {
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </AppSidebarLayout>
 </template>
 
 <script>

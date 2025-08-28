@@ -20,7 +20,11 @@ class ProductFactory extends Factory
             'name' => $this->faker->words(3, true),
             'description' => $this->faker->paragraph(),
             'category' => $this->faker->randomElement(['Electronics', 'Clothing', 'Books', 'Home', 'Sports']),
-            'store_id' => 1, // Will be overridden in tests
+            'store_id' => 1,
+            'sku' => $this->faker->unique()->regexify('[A-Z]{3}-[0-9]{6}'),
+            'barcode' => $this->faker->optional()->ean13(),
+            'cost_price' => $this->faker->randomFloat(2, 5, 100),
+            'sale_price' => $this->faker->randomFloat(2, 10, 200),
         ];
     }
 }

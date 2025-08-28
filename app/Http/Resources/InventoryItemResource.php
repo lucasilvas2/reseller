@@ -16,7 +16,9 @@ class InventoryItemResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'product_id' => $this->product_id,
+            'name' => $this->name,
+            'description' => $this->description,
+            'category' => $this->category ?? 'Uncategorized',
             'sku' => $this->sku,
             'barcode' => $this->barcode,
             'cost_price' => $this->cost_price,
@@ -25,14 +27,11 @@ class InventoryItemResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
-            // Product information
-            'product' => $this->whenLoaded('products', function () {
+            // Brand information
+            'brand' => $this->whenLoaded('brand', function () {
                 return [
-                    'id' => $this->product->id,
-                    'name' => $this->product->name,
-                    'description' => $this->product->description,
-                    'category' => $this->product->category ?? 'Uncategorized',
-                    'brand' => $this->product->brand,
+                    'id' => $this->brand->id,
+                    'name' => $this->brand->name,
                 ];
             }),
 

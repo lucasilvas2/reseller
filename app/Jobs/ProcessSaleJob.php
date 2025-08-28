@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\OrderItem;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\StockMovement;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -109,23 +109,23 @@ class ProcessSaleJob implements ShouldQueue
             $item->update(['status' => 'processing']);
 
             // 🔒 LOCK no ProductSku para prevenir race conditions
-            $productVariant = ProductVariant::where('id', $item->product_variant_id)
+            $product = Product::where('id', $item->product_id)
                 ->lockForUpdate()
                 ->first();
 
-            if (!$productVariant) {
+            if (!$product) {
                 throw new \Exception('Product SKU not found for item ID: ' . $item->id);
             }
 
             // ✅ Calcular estoque atual baseado em StockMovements
-            $availableStock = $productVariant->getCurrentStock();
+            $availableStock = $product->getCurrentStock();
             if ($availableStock < $item->quantity) {
                 throw new \Exception("Estoque insuficiente. Disponível: {$availableStock}, Solicitado: {$item->quantity}");
             }
 
             // ✅ Criar movimento de estoque de saída (estrutura correta)
             StockMovement::create([
-                'product_variant_id' => $item->product_variant_id,
+                'product_id' => $item->product_id,
                 'store_id' => $item->sale->store_id,
                 'type' => 'out',
                 'quantity' => $item->quantity,
@@ -140,7 +140,7 @@ class ProcessSaleJob implements ShouldQueue
             Log::info('OrderItem processed successfully in queue', [
                 'order_item_id' => $item->id,
                 'sale_id' => $item->sale_id,
-                'product_variant_id' => $item->product_variant_id,
+                'product_id' => $item->product_id,
                 'quantity' => $item->quantity
             ]);
 
@@ -166,45 +166,45 @@ class ProcessSaleJob implements ShouldQueue
         $pendingItems = $sale->orderItems()->pending()->get();
 
         // Agrupar itens por produto para reduzir locks
-        $itemsByProduct = $pendingItems->groupBy('product_variant_id');
+        $itemsByProduct = $pendingItems->groupBy('product_id');
 
-        foreach ($itemsByProduct as $productVariantId => $productItems) {
-            $this->processProductBatch($productVariantId, $productItems);
+        foreach ($itemsByProduct as $productId => $productItems) {
+            $this->processProductBatch($productId, $productItems);
         }
     }
 
     /**
      * 🔒 Processar lote de itens do mesmo produto (um lock por produto)
      */
-    private function processProductBatch(int $productVariantId, $productItems): void
+    private function processProductBatch(int $productId, $productItems): void
     {
         // Verificar circuit breaker
-        if ($this->isCircuitBreakerOpen($productVariantId)) {
+        if ($this->isCircuitBreakerOpen($productId)) {
             $this->deferProductItems($productItems, 'Circuit breaker open');
             return;
         }
 
         try {
-            DB::transaction(function () use ($productVariantId, $productItems) {
+            DB::transaction(function () use ($productId, $productItems) {
                 // Configurar timeout de lock específico para alta demanda
                 $lockTimeout = config('sales.high_demand.lock_timeout_seconds', 5);
                 DB::statement("SET innodb_lock_wait_timeout = ?", [$lockTimeout]);
 
                 // Um lock para todos os itens do mesmo produto
-                $productVariant = ProductVariant::where('id', $productVariantId)
+                $product = Product::where('id', $productId)
                     ->lockForUpdate()
                     ->first();
 
-                if (!$productVariant) {
-                    throw new \Exception("Product SKU {$productVariantId} not found");
+                if (!$product) {
+                    throw new \Exception("Product SKU {$productId} not found");
                 }
 
                 // Calcular quantidade total necessária
                 $totalQuantityNeeded = $productItems->sum('quantity');
-                $availableStock = $productVariant->getCurrentStock();
+                $availableStock = $product->getCurrentStock();
 
                 Log::info('Processing product batch', [
-                    'product_variant_id' => $productVariantId,
+                    'product_id' => $productId,
                     'items_count' => $productItems->count(),
                     'total_quantity_needed' => $totalQuantityNeeded,
                     'available_stock' => $availableStock
@@ -213,20 +213,20 @@ class ProcessSaleJob implements ShouldQueue
                 if ($availableStock >= $totalQuantityNeeded) {
                     // Processar todos os itens do produto
                     foreach ($productItems as $item) {
-                        $this->processSingleItemInBatch($item, $productVariant);
+                        $this->processSingleItemInBatch($item, $product);
                     }
                 } else {
                     // Processar parcialmente (FIFO) até o estoque acabar
-                    $this->processPartialStock($productItems, $productVariant, $availableStock);
+                    $this->processPartialStock($productItems, $product, $availableStock);
                 }
             }, 3); // Menos tentativas para alta demanda
 
             // Reset circuit breaker em caso de sucesso
-            $this->resetCircuitBreaker($productVariantId);
+            $this->resetCircuitBreaker($productId);
 
         } catch (\Exception $e) {
             // Registrar falha no circuit breaker
-            $this->recordCircuitBreakerFailure($productVariantId);
+            $this->recordCircuitBreakerFailure($productId);
 
             // Falhar todos os itens do produto
             foreach ($productItems as $item) {
@@ -234,7 +234,7 @@ class ProcessSaleJob implements ShouldQueue
             }
 
             Log::error('Product batch processing failed', [
-                'product_variant_id' => $productVariantId,
+                'product_id' => $productId,
                 'items_count' => $productItems->count(),
                 'error' => $e->getMessage()
             ]);
@@ -256,13 +256,13 @@ class ProcessSaleJob implements ShouldQueue
     /**
      * ⚡ Processar item individual dentro do batch
      */
-    private function processSingleItemInBatch(OrderItem $item, ProductVariant $productVariant): void
+    private function processSingleItemInBatch(OrderItem $item, Product $product): void
     {
         $item->update(['status' => 'processing']);
 
         // Criar movimento de estoque
         StockMovement::create([
-            'product_variant_id' => $item->product_variant_id,
+            'product_id' => $item->product_id,
             'store_id' => $item->sale->store_id,
             'type' => 'out',
             'quantity' => $item->quantity,
@@ -276,7 +276,7 @@ class ProcessSaleJob implements ShouldQueue
 
         Log::debug('Item processed in batch', [
             'order_item_id' => $item->id,
-            'product_variant_id' => $item->product_variant_id,
+            'product_id' => $item->product_id,
             'quantity' => $item->quantity
         ]);
     }
@@ -284,14 +284,14 @@ class ProcessSaleJob implements ShouldQueue
     /**
      * 📦 Processar estoque parcial (FIFO)
      */
-    private function processPartialStock($productItems, ProductVariant $productVariant, int $availableStock): void
+    private function processPartialStock($productItems, Product $product, int $availableStock): void
     {
         $remainingStock = $availableStock;
 
         foreach ($productItems as $item) {
             if ($remainingStock >= $item->quantity) {
                 // Processar item completo
-                $this->processSingleItemInBatch($item, $productVariant);
+                $this->processSingleItemInBatch($item, $product);
                 $remainingStock -= $item->quantity;
             } else {
                 // Falhar item por falta de estoque
@@ -300,7 +300,7 @@ class ProcessSaleJob implements ShouldQueue
         }
 
         Log::info('Partial stock processing completed', [
-            'product_variant_id' => $productVariant->id,
+            'product_id' => $product->id,
             'initial_stock' => $availableStock,
             'remaining_stock' => $remainingStock,
             'items_processed' => $productItems->count()
@@ -327,13 +327,13 @@ class ProcessSaleJob implements ShouldQueue
     /**
      * 🔥 Circuit Breaker - Verificar se produto está em alta contenção
      */
-    private function isCircuitBreakerOpen(int $productVariantId): bool
+    private function isCircuitBreakerOpen(int $productId): bool
     {
         if (!config('sales.high_demand.circuit_breaker.enabled', true)) {
             return false;
         }
 
-        $failures = Cache::get("circuit_breaker_failures:{$productVariantId}", 0);
+        $failures = Cache::get("circuit_breaker_failures:{$productId}", 0);
         $threshold = config('sales.high_demand.circuit_breaker.failure_threshold', 5);
 
         return $failures >= $threshold;
@@ -342,13 +342,13 @@ class ProcessSaleJob implements ShouldQueue
     /**
      * 📈 Registrar falha no circuit breaker
      */
-    private function recordCircuitBreakerFailure(int $productVariantId): void
+    private function recordCircuitBreakerFailure(int $productId): void
     {
         if (!config('sales.high_demand.circuit_breaker.enabled', true)) {
             return;
         }
 
-        $key = "circuit_breaker_failures:{$productVariantId}";
+        $key = "circuit_breaker_failures:{$productId}";
         $failures = Cache::get($key, 0) + 1;
         $ttl = config('sales.high_demand.circuit_breaker.recovery_time', 300);
 
@@ -356,7 +356,7 @@ class ProcessSaleJob implements ShouldQueue
 
         if ($failures >= config('sales.high_demand.circuit_breaker.failure_threshold', 5)) {
             Log::warning('Circuit breaker opened for product', [
-                'product_variant_id' => $productVariantId,
+                'product_id' => $productId,
                 'failures' => $failures,
                 'recovery_time' => $ttl
             ]);
@@ -366,13 +366,13 @@ class ProcessSaleJob implements ShouldQueue
     /**
      * ✅ Reset circuit breaker em caso de sucesso
      */
-    private function resetCircuitBreaker(int $productVariantId): void
+    private function resetCircuitBreaker(int $productId): void
     {
         if (!config('sales.high_demand.circuit_breaker.enabled', true)) {
             return;
         }
 
-        Cache::forget("circuit_breaker_failures:{$productVariantId}");
+        Cache::forget("circuit_breaker_failures:{$productId}");
     }
 
     /**

@@ -7,7 +7,6 @@ use App\Http\Resources\InventoryItemResource;
 use App\Http\Resources\InventoryItemCollection;
 use App\Repositories\InventoryRepository;
 use App\Models\Product;
-use App\Models\ProductVariant;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,16 +14,13 @@ use Inertia\Response;
 class InventoryController extends Controller
 {
     protected InventoryRepository $inventoryRepository;
-    protected ProductVariant $productVariant;
     protected Product $product;
 
     public function __construct(
         InventoryRepository $inventoryRepository,
-        ProductVariant $productVariant,
         Product $product
     ) {
         $this->inventoryRepository = $inventoryRepository;
-        $this->productVariant = $productVariant;
         $this->product = $product;
     }
 
@@ -79,17 +75,15 @@ class InventoryController extends Controller
      */
     private function buildBaseQuery(array $filters): \Illuminate\Database\Eloquent\Builder
     {
-        $query = $this->productVariant->where('store_id', Auth::user()->store_id)
-            ->with(['products', 'stockMovements']);
+        $query = $this->product->where('store_id', Auth::user()->store_id)
+            ->with(['brand', 'stockMovements']);
 
         // Search filter
         if ($filters['search']) {
             $query->where(function($q) use ($filters) {
-                $q->whereHas('products', function($productQuery) use ($filters) {
-                    $productQuery->where('name', 'like', "%{$filters['search']}%");
-                })
-                ->orWhere('sku', 'like', "%{$filters['search']}%")
-                ->orWhere('barcode', 'like', "%{$filters['search']}%");
+                $q->where('name', 'like', "%{$filters['search']}%")
+                  ->orWhere('sku', 'like', "%{$filters['search']}%")
+                  ->orWhere('barcode', 'like', "%{$filters['search']}%");
             });
         }
 
@@ -207,11 +201,11 @@ class InventoryController extends Controller
      */
     public function apiShow($id): InventoryItemResource
     {
-        $productSku = $this->productVariant->where('id', $id)
+        $product = $this->product->where('id', $id)
             ->where('store_id', Auth::user()->store_id)
-            ->with(['products', 'stockMovements'])
+            ->with(['brand', 'stockMovements'])
             ->firstOrFail();
 
-        return new InventoryItemResource($productSku);
+        return new InventoryItemResource($product);
     }
 }

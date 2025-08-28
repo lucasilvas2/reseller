@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\OrderItem;
-use App\Models\ProductVariant;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -94,7 +94,7 @@ class MonitorHighDemandCommand extends Command
         $activeBreakers = 0;
         $threshold = config('sales.high_demand.circuit_breaker.failure_threshold', 5);
 
-        $productSkus = ProductVariant::pluck('id');
+        $products = Product::pluck('id');
 
         foreach ($productSkus as $skuId) {
             $failures = Cache::get("circuit_breaker_failures:{$skuId}", 0);

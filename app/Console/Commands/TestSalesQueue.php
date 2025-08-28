@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Contracts\SaleProcessor;
 use App\Models\Sale;
 use App\Models\Client;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\OrderItem;
 use App\Models\StockMovement;
 use Illuminate\Console\Command;
@@ -41,7 +41,7 @@ class TestSalesQueue extends Command
             $this->createTestData();
         }
 
-        // ✅ Forçar processador baseado no parâmetro --processor
+        // Forçar processador baseado no parâmetro --processor
         $processorType = $this->option('processor');
 
         if ($processorType === 'queued') {
@@ -78,7 +78,7 @@ class TestSalesQueue extends Command
         $queueConnection = config('queue.default');
         $this->line("Queue Connection: {$queueConnection}");
 
-        // ✅ Permitir database queue para testes também
+        // Permitir database queue para testes também
         if (!in_array($queueConnection, ['sqs', 'database'])) {
             $this->error('❌ Queue connection deve ser "sqs" ou "database" para este teste');
             return false;
@@ -137,32 +137,37 @@ class TestSalesQueue extends Command
                 ]
             );
 
-            // Criar produto SKU se não existir
+            // Criar ou buscar um brand
+            $brand = \App\Models\Brand::firstOrCreate(
+                ['name' => 'Test Brand'],
+                [
+                    'name' => 'Test Brand',
+                    'description' => 'Brand criado para testes',
+                    'store_id' => $store->id,
+                ]
+            );
+
+            // Criar produto consolidado se não existir
             $product = \App\Models\Product::firstOrCreate(
-                ['name' => 'Produto Teste'],
+                ['sku' => 'TEST-001'], // Buscar por SKU agora
                 [
                     'name' => 'Produto Teste',
                     'description' => 'Produto para teste',
-                    'brand_id' => 1,
-                    'store_id' => $store->id,
-                ]
-            );
-
-            $productSku = ProductVariant::firstOrCreate(
-                ['sku' => 'TEST-001'],
-                [
-                    'product_id' => $product->id,
-                    'store_id' => $store->id,
+                    'category' => 'Teste',
+                    'sku' => 'TEST-001',
+                    'barcode' => '1234567890123',
                     'cost_price' => 10.00,
                     'sale_price' => 20.00,
+                    'brand_id' => $brand->id, // Usar brand criado
+                    'store_id' => $store->id,
                 ]
             );
 
-            // ✅ Garantir que há estoque através de StockMovement
-            $currentStock = $productSku->getCurrentStock();
+            // Garantir que há estoque através de StockMovement
+            $currentStock = $product->getCurrentStock();
             if ($currentStock < 100) {
                 StockMovement::create([
-                    'product_sku_id' => $productSku->id,
+                    'product_id' => $product->id,
                     'type' => 'in',
                     'quantity' => 100,
                     'user_id' => $user->id,
@@ -172,7 +177,7 @@ class TestSalesQueue extends Command
             }
 
             $this->line("✅ Cliente criado: {$client->user->name} (ID: {$client->id})");
-            $this->line("✅ Produto SKU criado: {$productSku->sku} (ID: {$productSku->id})");
+            $this->line("✅ Produto consolidado criado: {$product->sku} (ID: {$product->id})");
         });
     }
 
@@ -215,9 +220,9 @@ class TestSalesQueue extends Command
     {
         // Buscar qualquer cliente disponível
         $client = Client::with('user')->first();
-        $productSku = ProductVariant::where('sku', 'TEST-001')->first();
+        $product = Product::where('sku', 'TEST-001')->first();
 
-        if (!$client || !$productSku) {
+        if (!$client || !$product) {
             throw new \Exception('Dados de teste não encontrados. Use --create-data');
         }
 
@@ -229,14 +234,15 @@ class TestSalesQueue extends Command
             'status' => 'pending',
             'total_amount' => 40.00,
             'notes' => 'Venda de teste - ' . now(),
-        ]);        // Criar itens da venda
+        ]);
+
+        // Criar itens da venda
         OrderItem::create([
             'sale_id' => $sale->id,
-            'product_sku_id' => $productSku->id,
+            'product_id' => $product->id,
             'quantity' => 2,
             'unit_price' => 20.00,
             'total_price' => 40.00,
-            'status' => 'pending',
         ]);
 
         return $sale;
@@ -284,11 +290,8 @@ class TestSalesQueue extends Command
             [
                 ['Sale ID', $sale->id],
                 ['Status', $sale->status],
-                ['Total Amount', 'R$ ' . number_format($sale->total_amount, 2, ',', '.')],
+                ['Total Amount', 'R$ ' . number_format((float)$sale->total_amount, 2, ',', '.')],
                 ['Order Items', $sale->orderItems->count()],
-                ['Items Completed', $sale->orderItems->where('status', 'completed')->count()],
-                ['Items Canceled', $sale->orderItems->where('status', 'canceled')->count()],
-                ['Items Pending', $sale->orderItems->where('status', 'pending')->count()],
             ]
         );
 

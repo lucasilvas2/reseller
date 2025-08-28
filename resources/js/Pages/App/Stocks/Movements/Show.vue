@@ -1,19 +1,52 @@
 <template>
-    <AppLayout title="Movement Details">
+    <AppSidebarLayout title="Movement Details">
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Movement Details #{{ movement.id }}
-                </h2>
-                <div class="flex space-x-3">
-                    <a :href="route('stocks.movements.index')"
-                       class="text-gray-600 hover:text-gray-900 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-md">
-                        ← Back to List
-                    </a>
-                    <a :href="route('stocks.movements.edit', movement.id)"
-                       class="text-blue-600 hover:text-blue-900 text-sm bg-blue-100 hover:bg-blue-200 px-3 py-2 rounded-md">
-                        Edit Movement
-                    </a>
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4">
+                    <!-- Breadcrumb e Título -->
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0 flex-1">
+                            <!-- Breadcrumb -->
+                            <nav class="flex mb-2" aria-label="Breadcrumb">
+                                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                                    <li class="inline-flex items-center">
+                                        <Link :href="route('stocks.movements.index')" class="text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                            Movements
+                                        </Link>
+                                    </li>
+                                    <li aria-current="page">
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            <span class="ml-1 text-sm font-medium text-gray-700 dark:text-gray-300">Edit</span>
+                                        </div>
+                                    </li>
+                                </ol>
+                            </nav>
+
+                            <!-- Título -->
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                                Movement Details #{{ movement.id }}
+                            </h1>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="ml-4 flex items-center space-x-3">
+                            <Link :href="route('stocks.movements.index')"
+                               class="text-gray-600 hover:text-gray-900 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-md">
+                                ← Back to List
+                            </Link>
+                            <Link :href="route('stocks.movements.edit', movement.id)"
+                               class="text-blue-600 hover:text-blue-900 text-sm bg-blue-100 hover:bg-blue-200 px-3 py-2 rounded-md">
+                                Edit Movement
+                            </Link>
+                        </div>
+                    </div>
+
+                    <!-- Stats Row -->
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    </div>
                 </div>
             </div>
         </template>
@@ -56,19 +89,19 @@
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-500">Product Name:</span>
                                         <span class="text-sm text-gray-900">
-                                            {{ movement.product_variant?.products?.name || 'N/A' }}
+                                            {{ movement.product?.name || 'N/A' }}
                                         </span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-500">SKU:</span>
                                         <span class="text-sm text-gray-900">
-                                            {{ movement.product_variant?.sku || 'N/A' }}
+                                            {{ movement.product?.sku || 'N/A' }}
                                         </span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-500">Barcode:</span>
                                         <span class="text-sm text-gray-900">
-                                            {{ movement.product_variant?.barcode || 'N/A' }}
+                                            {{ movement.product?.barcode || 'N/A' }}
                                         </span>
                                     </div>
                                 </div>
@@ -81,25 +114,25 @@
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-500">Cost Price:</span>
                                         <span class="text-sm text-gray-900">
-                                            ${{ formatPrice(movement.product_variant?.cost_price) }}
+                                            ${{ formatPrice(movement.product?.cost_price) }}
                                         </span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-500">Sale Price:</span>
                                         <span class="text-sm text-gray-900">
-                                            ${{ formatPrice(movement.product_variant?.sale_price) }}
+                                            ${{ formatPrice(movement.product?.sale_price) }}
                                         </span>
                                     </div>
                                     <div class="flex justify-between border-t pt-3">
                                         <span class="text-sm font-medium text-gray-700">Total Cost:</span>
                                         <span class="text-sm font-bold text-gray-900">
-                                            ${{ formatPrice(movement.product_variant?.cost_price * movement.quantity) }}
+                                            ${{ formatPrice(movement.product?.cost_price * movement.quantity) }}
                                         </span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-700">Total Sale Value:</span>
                                         <span class="text-sm font-bold text-green-600">
-                                            ${{ formatPrice(movement.product_variant?.sale_price * movement.quantity) }}
+                                            ${{ formatPrice(movement.product?.sale_price * movement.quantity) }}
                                         </span>
                                     </div>
                                 </div>
@@ -166,7 +199,7 @@
                             </div>
 
                             <!-- Profit Analysis -->
-                            <div v-if="movement.product_variant?.cost_price && movement.product_variant?.sale_price">
+                            <div v-if="movement.product?.cost_price && movement.product?.sale_price">
                                 <h4 class="text-lg font-medium text-gray-900 mb-4">Profit Analysis</h4>
                                 <div class="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg space-y-3">
                                     <div class="flex justify-between">
@@ -194,15 +227,15 @@
 
                     <!-- Action Buttons -->
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between">
-                        <a :href="route('stocks.movements.index')"
+                        <Link :href="route('stocks.movements.index')"
                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
                             Back to List
-                        </a>
+                        </Link>
                         <div class="flex space-x-3">
-                            <a :href="route('stocks.movements.edit', movement.id)"
+                            <Link :href="route('stocks.movements.edit', movement.id)"
                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                 Edit Movement
-                            </a>
+                            </Link>
                             <button @click="confirmDelete"
                                     class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                                 Delete Movement
@@ -212,15 +245,18 @@
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </AppSidebarLayout>
 </template>
 
 <script>
 import AppLayout from "@/Layouts/AppLayout.vue";
-import { router } from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
+import AppSidebarLayout from "@/Layouts/AppSidebarLayout.vue";
 
 export default {
     components: {
+        Link,
+        AppSidebarLayout,
         AppLayout,
     },
     props: {
@@ -258,8 +294,8 @@ export default {
             return classes[type] || 'bg-gray-100 text-gray-800';
         },
         getUnitProfit() {
-            const cost = parseFloat(this.movement.product_variant?.cost_price || 0);
-            const sale = parseFloat(this.movement.product_variant?.sale_price || 0);
+            const cost = parseFloat(this.movement.product?.cost_price || 0);
+            const sale = parseFloat(this.movement.product?.sale_price || 0);
             return sale - cost;
         },
         getTotalProfit() {
@@ -274,8 +310,8 @@ export default {
             return profit >= 0 ? 'text-green-600' : 'text-red-600';
         },
         getMarginPercentage() {
-            const cost = parseFloat(this.movement.product_variant?.cost_price || 0);
-            const sale = parseFloat(this.movement.product_variant?.sale_price || 0);
+            const cost = parseFloat(this.movement.product?.cost_price || 0);
+            const sale = parseFloat(this.movement.product?.sale_price || 0);
             if (cost === 0) return '0';
             return ((sale - cost) / cost * 100).toFixed(1);
         },

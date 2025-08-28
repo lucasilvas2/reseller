@@ -1,4 +1,4 @@
-# Dealer Management System
+# Reseller Management System
 
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
@@ -135,7 +135,7 @@ Todos com volumes persistentes e health checks.
 ```bash
 # 1. Clone e instale dependências
 git clone <repository-url>
-cd dealer
+cd reseller
 composer install && npm install
 
 # 2. Configure ambiente
@@ -311,8 +311,8 @@ php artisan sales:validate-implementation
 php artisan sales:monitor-high-demand --interval=5
 
 # Health check dos serviços
-docker exec dealer-redis redis-cli ping
-docker exec dealer-mysql-1 mysqladmin ping
+docker exec reseller-redis redis-cli ping
+docker exec reseller-mysql-1 mysqladmin ping
 ```
 
 ### 🎯 **Métricas Comprovadas**

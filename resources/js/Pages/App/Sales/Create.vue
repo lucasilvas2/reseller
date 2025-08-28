@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useForm, router } from '@inertiajs/vue3';
+import {ref, computed, onMounted, onUnmounted} from 'vue';
+import {useForm, router, Link} from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
@@ -11,6 +11,7 @@ import ProductSelector from '@/Components/Sales/ProductSelector.vue';
 import ClientSelector from '@/Components/Sales/ClientSelector.vue';
 import SaleItemRow from '@/Components/Sales/SaleItemRow.vue';
 import SaleSummary from '@/Components/Sales/SaleSummary.vue';
+import AppSidebarLayout from "@/Layouts/AppSidebarLayout.vue";
 
 // Props
 const props = defineProps({
@@ -40,9 +41,9 @@ const form = useForm({
 // Computed
 const canSubmit = computed(() => {
     return selectedClient.value &&
-           saleItems.value.length > 0 &&
-           !isSubmitting.value &&
-           !hasStockErrors.value;
+        saleItems.value.length > 0 &&
+        !isSubmitting.value &&
+        !hasStockErrors.value;
 });
 
 const hasStockErrors = computed(() => {
@@ -64,7 +65,7 @@ const totals = computed(() => {
         return sum + (parseFloat(item.quantity) || 0);
     }, 0);
 
-    return { subtotal, itemCount };
+    return {subtotal, itemCount};
 });
 
 // Methods
@@ -88,14 +89,14 @@ const handleQuickCreateClient = async (clientData) => {
 };
 
 const handleProductSelected = (product) => {
-    const existingIndex = saleItems.value.findIndex(item => item.product_variant_id === product.id);
+    const existingIndex = saleItems.value.findIndex(item => item.product_id === product.id);
 
     if (existingIndex >= 0) {
         saleItems.value[existingIndex].quantity += 1;
     } else {
         const newItem = {
             id: Date.now(),
-            product_variant_id: product.id,
+            product_id: product.id,
             product: product,
             quantity: 1,
             unit_price: parseFloat(product.price) || 0
@@ -130,7 +131,7 @@ const handleRemoveItem = (index) => {
 
 const updateFormItems = () => {
     form.items = saleItems.value.map(item => ({
-        product_variant_id: item.product_variant_id,
+        product_id: item.product_id,
         quantity: item.quantity,
         unit_price: item.unit_price
     }));
@@ -272,15 +273,52 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <AppLayout title="Nova Venda">
+    <AppSidebarLayout title="Create Sale">
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Nova Venda
-                </h2>
-                <div class="text-sm text-gray-500">
-                    <kbd class="px-2 py-1 bg-gray-100 rounded">Ctrl+S</kbd> salvar •
-                    <kbd class="px-2 py-1 bg-gray-100 rounded">Esc</kbd> cancelar
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4">
+                    <!-- Breadcrumb e Título -->
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0 flex-1">
+                            <!-- Breadcrumb -->
+                            <nav class="flex mb-2" aria-label="Breadcrumb">
+                                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                                    <li class="inline-flex items-center">
+                                        <Link :href="route('sales.index')"
+                                           class="text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                            Sales
+                                        </Link>
+                                    </li>
+                                    <li aria-current="page">
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                                      clip-rule="evenodd"></path>
+                                            </svg>
+                                            <span class="ml-1 text-sm font-medium text-gray-700 dark:text-gray-300">Create</span>
+                                        </div>
+                                    </li>
+                                </ol>
+                            </nav>
+
+                            <!-- Título -->
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                                Create Sale
+                            </h1>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="ml-4 flex items-center space-x-3">
+                            <div class="text-sm text-gray-500">
+                                <kbd class="px-2 py-1 bg-gray-100 rounded">Ctrl+S</kbd> salvar •
+                                <kbd class="px-2 py-1 bg-gray-100 rounded">Esc</kbd> cancelar
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-4 gap-4">
+
+                    </div>
                 </div>
             </div>
         </template>
@@ -363,8 +401,10 @@ onUnmounted(() => {
                                 <div v-if="hasStockErrors"
                                      class="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
                                     <div class="flex">
-                                        <svg class="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.732 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                        <svg class="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor"
+                                             viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.732 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
                                         </svg>
                                         <div>
                                             <h4 class="text-sm font-medium text-red-800">Problemas de Estoque</h4>
@@ -394,7 +434,7 @@ onUnmounted(() => {
                             <div class="bg-white rounded-lg shadow-sm border p-6">
                                 <h3 class="text-lg font-medium text-gray-900 mb-4">Observações</h3>
                                 <div>
-                                    <InputLabel for="notes" value="Observações (opcional)" />
+                                    <InputLabel for="notes" value="Observações (opcional)"/>
                                     <textarea
                                         id="notes"
                                         v-model="form.notes"
@@ -403,7 +443,7 @@ onUnmounted(() => {
                                         class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                         placeholder="Observações sobre a venda..."
                                     ></textarea>
-                                    <InputError :message="form.errors.notes" class="mt-2" />
+                                    <InputError :message="form.errors.notes" class="mt-2"/>
                                 </div>
                             </div>
                         </div>
@@ -420,9 +460,13 @@ onUnmounted(() => {
                                                 :disabled="!canSubmit"
                                                 class="w-full justify-center"
                                             >
-                                                <svg v-if="isSubmitting" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                <svg v-if="isSubmitting"
+                                                     class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none"
+                                                     viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                            stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
                                                 {{ isSubmitting ? 'Processando...' : 'Criar Venda' }}
                                             </PrimaryButton>
@@ -456,12 +500,13 @@ onUnmounted(() => {
                 <div v-if="saleItems.length === 0 && selectedClient"
                      class="text-center py-12">
                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                     </svg>
                     <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhum produto adicionado</h3>
                     <p class="mt-1 text-sm text-gray-500">Comece adicionando produtos à venda.</p>
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </AppSidebarLayout>
 </template>

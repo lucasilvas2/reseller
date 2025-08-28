@@ -23,7 +23,7 @@ class StockMovementRepository
     public function getBaseQuery(): Builder
     {
         return $this->stockMovement->where('store_id', Auth::user()->store_id)
-            ->with(['productVariant.product', 'user']);
+            ->with(['product.brand', 'user']);
     }
 
     /**
@@ -108,8 +108,8 @@ class StockMovementRepository
         }
 
         // Filter by product SKU
-        if (!empty($filters['product_variant_id'])) {
-            $query->where('product_variant_id', $filters['product_variant_id']);
+        if (!empty($filters['product_id'])) {
+            $query->where('product_id', $filters['product_id']);
         }
 
         // Filter by date range
@@ -130,11 +130,9 @@ class StockMovementRepository
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function($q) use ($search) {
-                $q->whereHas('productVariant', function($productVariantQuery) use ($search) {
-                    $productVariantQuery->where('sku', 'like', "%{$search}%")
-                        ->orWhereHas('products', function($productQuery) use ($search) {
-                            $productQuery->where('name', 'like', "%{$search}%");
-                        });
+                $q->whereHas('product', function($productQuery) use ($search) {
+                    $productQuery->where('sku', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%");
                 })
                 ->orWhereHas('user', function($userQuery) use ($search) {
                     $userQuery->where('name', 'like', "%{$search}%");
@@ -149,8 +147,7 @@ class StockMovementRepository
 
             switch ($sortBy) {
                 case 'product_name':
-                    $query->join('products_skus as ps', 'stock_movements.product_variant_id', '=', 'ps.id')
-                          ->join('products as p', 'ps.product_id', '=', 'p.id')
+                    $query->join('products as p', 'stock_movements.product_id', '=', 'p.id')
                           ->orderBy('p.name', $sortOrder)
                           ->select('stock_movements.*');
                     break;
@@ -189,7 +186,7 @@ class StockMovementRepository
         $movement = $this->findByIdOrFail($id);
         $movement->update($data);
 
-        return $movement->fresh(['productVariant.product', 'user']);
+        return $movement->fresh(['product.brand', 'user']);
     }
 
     /**
@@ -204,10 +201,10 @@ class StockMovementRepository
     /**
      * Get movements by product SKU
      */
-    public function getByproductVariant(int $productVariantId): Collection
+    public function getByProduct(int $productId): Collection
     {
         return $this->getBaseQuery()
-            ->where('product_variant_id', $productVariantId)
+            ->where('product_id', $productId)
             ->orderBy('created_at', 'desc')
             ->get();
     }

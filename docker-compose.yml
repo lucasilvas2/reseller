@@ -3,7 +3,7 @@ services:
         image: mysql:8.0
         environment:
             MYSQL_ROOT_PASSWORD: rootpassword
-            MYSQL_DATABASE: dealer
+            MYSQL_DATABASE: reseller
             MYSQL_USER: admin
             MYSQL_PASSWORD: admin
         ports:
@@ -30,7 +30,7 @@ services:
 
     redis:
         image: redis:7.2-alpine
-        container_name: "dealer-redis"
+        container_name: "reseller-redis"
         ports:
             - "6380:6379"
         environment:

@@ -1,7 +1,7 @@
 <template>
-    <div class="bg-white shadow-xl sm:rounded-lg overflow-hidden relative">
+    <div class="bg-white dark:bg-gray-800 shadow-xl sm:rounded-lg overflow-hidden relative">
         <!-- Header com Search e Items per page -->
-        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 ">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                 <div class="flex-1">
                     <h3 v-if="title" class="text-lg font-medium text-gray-900">{{ title }}</h3>
@@ -49,7 +49,7 @@
                     <col v-for="header in headers" :key="header.key || header" class="min-w-0">
                     <col v-if="actions && actions.length > 0" style="width: 120px;">
                 </colgroup>
-                <thead class="bg-gray-50">
+                <thead class="bg-gray-50 ">
                     <tr>
                         <th
                             v-for="(header, index) in headers"

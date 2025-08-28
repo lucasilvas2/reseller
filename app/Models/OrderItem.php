@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrderItem extends Model
 {
@@ -14,12 +15,10 @@ class OrderItem extends Model
 
     protected $fillable = [
         'sale_id',
-        'product_sku_id',
+        'product_id',
         'quantity',
         'unit_price',
-        'total_price',
-        'status',
-        'error_message'
+        'total_price'
     ];
 
     protected $casts = [
@@ -35,15 +34,17 @@ class OrderItem extends Model
         return $this->belongsTo(Sale::class);
     }
 
-    public function productVariant(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+        return $this->belongsTo(Product::class, 'product_id');
     }
 
-    // Alias para compatibilidade (remover após refatoração completa)
-    public function productSku(): BelongsTo
+    /**
+     * Get failure records for this order item
+     */
+    public function failures(): HasMany
     {
-        return $this->productVariant();
+        return $this->hasMany(SaleItemFailure::class, 'order_item_id');
     }
 
     // Accessors & Mutators
@@ -57,16 +58,6 @@ class OrderItem extends Model
         return 'R$ ' . number_format((float)$this->total_price, 2, ',', '.');
     }
 
-    public function getStatusLabelAttribute(): string
-    {
-        return match($this->status) {
-            'pending' => 'Pendente',
-            'completed' => 'Concluído',
-            'canceled' => 'Cancelado',
-            default => ucfirst($this->status)
-        };
-    }
-
     // Métodos de cálculo
     public function calculateTotalPrice(): float
     {
@@ -75,7 +66,7 @@ class OrderItem extends Model
 
     public function updateTotalPrice(): void
     {
-        $this->total_price = $this->calculateTotalPrice();
+        $this->setAttribute('total_price', $this->calculateTotalPrice());
     }
 
     // Boot method para auto-calcular total_price
@@ -84,43 +75,13 @@ class OrderItem extends Model
         parent::boot();
 
         static::saving(function ($orderItem) {
-            $orderItem->total_price = (string)$orderItem->calculateTotalPrice();
+            $orderItem->total_price = $orderItem->calculateTotalPrice();
         });
     }
 
-    // Scopes
-    public function scopeByStatus($query, $status)
-    {
-        return $query->where('status', $status);
-    }
-
+    // Scopes simplificados (removidos os de status)
     public function scopeBySale($query, $saleId)
     {
         return $query->where('sale_id', $saleId);
-    }
-
-    public function scopePending($query)
-    {
-        return $query->where('status', 'pending');
-    }
-
-    public function scopeProcessing($query)
-    {
-        return $query->where('status', 'processing');
-    }
-
-    public function scopeCompleted($query)
-    {
-        return $query->where('status', 'completed');
-    }
-
-    public function scopeFailed($query)
-    {
-        return $query->where('status', 'failed');
-    }
-
-    public function canRetry(): bool
-    {
-        return $this->status === 'failed';
     }
 }

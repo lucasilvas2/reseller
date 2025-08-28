@@ -48,7 +48,7 @@ class AdminUserTest extends TestCase
 
         $response->assertInertia(function ($page) use ($adminRole){
            $page->component('Admin/Users/Index')
-               ->has('users', 3) // Ajustado para 3 usuários (apenas os dealers criados)
+               ->has('users', 3) // Ajustado para 3 usuários (apenas os resellers criados)
                ->where('users.0.roles.0.name', 'reseller')
                ->where('users.1.roles.0.name', 'reseller')
                ->where('users.2.roles.0.name', 'reseller');

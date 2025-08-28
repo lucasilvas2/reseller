@@ -1,7 +1,101 @@
+@import './buttons.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 [x-cloak] {
     display: none;
+}
+
+/* Transições suaves para modo escuro */
+@layer base {
+    * {
+        @apply transition-colors duration-200 ease-in-out;
+    }
+
+    html {
+        @apply scroll-smooth;
+    }
+
+    /* Personalizar scrollbar no modo escuro */
+    ::-webkit-scrollbar {
+        @apply w-2 h-2;
+    }
+
+    ::-webkit-scrollbar-track {
+        @apply bg-gray-100 dark:bg-gray-800;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        @apply bg-gray-400 dark:bg-gray-500;
+    }
+}
+
+/* Componentes customizados */
+@layer components {
+    .theme-transition {
+        @apply transition-all duration-300 ease-in-out;
+    }
+
+    .sidebar-item {
+        @apply relative flex items-center px-2 py-2 text-sm font-medium rounded-md transition-all duration-150 ease-in-out;
+    }
+
+    .sidebar-item.active {
+        @apply bg-indigo-100 text-indigo-900 border-r-4 border-indigo-500 dark:bg-indigo-900 dark:text-indigo-100;
+    }
+
+    .sidebar-item:not(.active) {
+        @apply text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white;
+    }
+
+    /* Seções colapsáveis da sidebar */
+    .collapsible-section {
+        @apply transition-all duration-300 ease-in-out;
+    }
+
+    .section-header {
+        @apply transition-all duration-200 ease-in-out;
+    }
+
+    .section-header:hover .section-icon {
+        @apply transform scale-110;
+    }
+}
+
+/* Animações personalizadas */
+@layer utilities {
+    .animate-fade-in {
+        animation: fadeIn 0.2s ease-in-out forwards;
+    }
+
+    .animate-fade-out {
+        animation: fadeOut 0.2s ease-in-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+    }
 }

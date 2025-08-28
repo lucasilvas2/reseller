@@ -1,5 +1,5 @@
 <template>
-    <AppLayout title="Stores">
+    <AppSidebarLayout title="Stores">
         <template #header>
             <div class="flex flex-row">
                 <div class="basis-1/2">
@@ -22,7 +22,7 @@
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </AppSidebarLayout>
 </template>
 
 <script>
@@ -31,9 +31,11 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import Table from "@/Components/Table.vue";
 import {router} from "@inertiajs/vue3";
 import AppLayout from "@/Layouts/AppLayout.vue";
+import AppSidebarLayout from "@/Layouts/AppSidebarLayout.vue";
 
 export default {
     components: {
+        AppSidebarLayout,
         AppLayout,
         PrimaryButton,
         Table,

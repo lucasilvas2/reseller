@@ -2,7 +2,7 @@
 
 namespace App\Repositories;
 
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\StockMovement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,12 +13,12 @@ use Illuminate\Support\Facades\DB;
 
 class InventoryRepository
 {
-    protected ProductVariant $productVariant;
+    protected Product $product;
     protected StockMovement $stockMovement;
 
-    public function __construct(ProductVariant $productVariant, StockMovement $stockMovement)
+    public function __construct(Product $product, StockMovement $stockMovement)
     {
-        $this->productVariant = $productVariant;
+        $this->product = $product;
         $this->stockMovement = $stockMovement;
     }
 
@@ -27,8 +27,8 @@ class InventoryRepository
      */
     public function getBaseQuery(): Builder
     {
-        return $this->productVariant->where('store_id', Auth::user()->store_id)
-            ->with(['products', 'stockMovements']);
+        return $this->product->where('store_id', Auth::user()->store_id)
+            ->with(['brand', 'stockMovements']);
     }
 
     /**
@@ -56,7 +56,7 @@ class InventoryRepository
     /**
      * Find inventory item by ID
      */
-    public function findById(int $id): ?ProductVariant
+    public function findById(int $id): ?Product
     {
         return $this->getBaseQuery()
             ->where('id', $id)
@@ -66,7 +66,7 @@ class InventoryRepository
     /**
      * Find inventory item by ID or fail
      */
-    public function findByIdOrFail(int $id): ProductVariant
+    public function findByIdOrFail(int $id): Product
     {
         return $this->getBaseQuery()
             ->where('id', $id)
@@ -146,15 +146,15 @@ class InventoryRepository
     /**
      * Calculate current stock for a product SKU
      */
-    public function calculateCurrentStock(int $productVariantId): int
+    public function calculateCurrentStock(int $productId): int
     {
         $totalIn = $this->stockMovement
-            ->where('product_variant_id', $productVariantId)
+            ->where('product_id', $productId)
             ->where('type', 'in')
             ->sum('quantity');
 
         $totalOut = $this->stockMovement
-            ->where('product_variant_id', $productVariantId)
+            ->where('product_id', $productId)
             ->where('type', 'out')
             ->sum('quantity');
 
@@ -168,53 +168,52 @@ class InventoryRepository
     {
         $inventory = $this->getAll($filters);
 
-        return $inventory->map(function ($productVariant) {
-            return $this->buildInventoryItem($productVariant);
+        return $inventory->map(function ($product) {
+            return $this->buildInventoryItem($product);
         });
     }
 
     /**
      * Build inventory item with calculations
      */
-    public function buildInventoryItem(ProductVariant $productVariant): array
+    public function buildInventoryItem(Product $product): array
     {
-        $totalIn = $productVariant->stockMovements->where('type', 'in')->sum('quantity');
-        $totalOut = $productVariant->stockMovements->where('type', 'out')->sum('quantity');
+        $totalIn = $product->stockMovements->where('type', 'in')->sum('quantity');
+        $totalOut = $product->stockMovements->where('type', 'out')->sum('quantity');
         $currentStock = $totalIn - $totalOut;
 
         return [
-            'id' => $productVariant->id,
-            'product_id' => $productVariant->product_id,
-            'product_name' => $productVariant->product->name ?? 'N/A',
-            'sku' => $productVariant->sku,
-            'barcode' => $productVariant->barcode,
-            'cost_price' => $productVariant->cost_price,
-            'sale_price' => $productVariant->sale_price,
+            'id' => $product->id,
+            'product_name' => $product->name ?? 'N/A',
+            'sku' => $product->sku,
+            'barcode' => $product->barcode,
+            'cost_price' => $product->cost_price,
+            'sale_price' => $product->sale_price,
             'current_stock' => $currentStock,
             'total_movements_in' => $totalIn,
             'total_movements_out' => $totalOut,
-            'stock_value' => $currentStock * ($productVariant->cost_price ?? 0),
-            'potential_revenue' => $currentStock * ($productVariant->sale_price ?? 0),
-            'profit_margin' => ($productVariant->sale_price ?? 0) - ($productVariant->cost_price ?? 0),
-            'profit_margin_percentage' => $this->calculateProfitMarginPercentage($productVariant),
-            'last_movement' => $productVariant->stockMovements->sortByDesc('created_at')->first()?->created_at,
+            'stock_value' => $currentStock * ($product->cost_price ?? 0),
+            'potential_revenue' => $currentStock * ($product->sale_price ?? 0),
+            'profit_margin' => ($product->sale_price ?? 0) - ($product->cost_price ?? 0),
+            'profit_margin_percentage' => $this->calculateProfitMarginPercentage($product),
+            'last_movement' => $product->stockMovements->sortByDesc('created_at')->first()?->created_at,
             'status' => $this->getStockStatus($currentStock),
             'needs_restock' => $currentStock <= 10,
-            'category' => $productVariant->product->category ?? 'Uncategorized',
+            'category' => $product->category ?? 'Uncategorized',
         ];
     }
 
     /**
      * Calculate profit margin percentage
      */
-    private function calculateProfitMarginPercentage(ProductVariant $productVariant): float
+    private function calculateProfitMarginPercentage(Product $product): float
     {
-        if (($productVariant->cost_price ?? 0) <= 0) {
+        if (($product->cost_price ?? 0) <= 0) {
             return 0;
         }
 
-        $margin = ($productVariant->sale_price ?? 0) - ($productVariant->cost_price ?? 0);
-        return ($margin / $productVariant->cost_price) * 100;
+        $margin = ($product->sale_price ?? 0) - ($product->cost_price ?? 0);
+        return ($margin / $product->cost_price) * 100;
     }
 
     /**

@@ -13,16 +13,20 @@ return new class extends Migration
     {
         Schema::create('stock_movements', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_variant_id')->constrained('product_variants');
+            $table->foreignId('product_id')->constrained('products');
             $table->foreignId('user_id')->constrained('users');
             $table->integer('quantity');
             $table->enum('type', ['in', 'out']);
             $table->text('description')->nullable();
+            $table->decimal('cost_price', 8, 2)->default(0);
             $table->foreignId('store_id')->constrained('stores');
             $table->foreignId('sale_id')->nullable()->constrained('sales');
             $table->foreignId('order_item_id')->nullable()->constrained('order_items');
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index(['product_id', 'store_id', 'type']);
+            $table->index(['store_id', 'created_at']);
         });
     }
 

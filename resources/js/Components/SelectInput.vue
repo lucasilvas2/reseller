@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 
 defineProps({
     modelValue: String,
+    required: Boolean,
     options: {
         type: Array,
         required: true,
@@ -25,8 +26,9 @@ defineExpose({ focus: () => select.value.focus() });
 <template>
     <select
         ref="select"
-        class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+        class="dark:bg-gray-700 dark:text-white border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
         :value="modelValue"
+        :required="required"
         @change="$emit('update:modelValue', $event.target.value)"
     >
         <option v-for="option in options" :key="option.value" :value="option.value">
