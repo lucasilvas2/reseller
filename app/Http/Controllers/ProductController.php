@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProductRequest;
 use App\Models\Brand;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class ProductController extends Controller
     public function index(Request $request): \Inertia\Response
     {
         $query = $this->productModel->where('store_id', Auth::user()->store_id)
-            ->with('brands');
+            ->with('brand');
 
         // Apply search filter
         if ($request->filled('search')) {
@@ -75,7 +76,7 @@ class ProductController extends Controller
                 'id' => $product->id,
                 'name' => $product->name,
                 'description' => $product->description,
-                'brand_name' => $product->brands->name ?? 'N/A',
+                'brand_name' => $product->brand->name ?? 'N/A',
                 'brand_id' => $product->brand_id,
                 'created_at' => $product->created_at,
                 'created_at_formatted' => $product->created_at->format('M d, Y H:i'),
@@ -107,15 +108,8 @@ class ProductController extends Controller
         return inertia('App/Products/Create', compact('brands'));
     }
 
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(ProductRequest $request): \Illuminate\Http\RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'brand_id' => 'required|exists:brands,id',
-            'description' => 'nullable|string|max:1000',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
-
         $request->merge([
             'store_id' => Auth::user()->store_id,
         ]);
@@ -137,15 +131,8 @@ class ProductController extends Controller
         return inertia('App/Products/Edit', compact('product', 'brands'));
     }
 
-    public function update(Request $request, int $id): \Illuminate\Http\RedirectResponse
+    public function update(ProductRequest $request, int $id): \Illuminate\Http\RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'brand_id' => 'required|exists:brands,id',
-            'description' => 'nullable|string|max:1000',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
-
         $product = $this->productModel->findOrFail($id);
         $product->update($request->all());
 
@@ -181,29 +168,23 @@ class ProductController extends Controller
         }
 
         $products = Product::where('store_id', Auth::user()->store_id)
-            ->with(['variants' => function($query) {
-                $query->where('store_id', Auth::user()->store_id);
-            }])
             ->where(function($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('description', 'like', "%{$query}%");
+                    ->orWhere('description', 'like', "%{$query}%");
             })
             ->limit(10)
             ->get()
-            ->flatMap(function ($product) {
-                return $product->variants->map(function ($sku) use ($product) {
-                    return [
-                        'id' => $sku->id,
-                        'name' => $product->name,
-                        'sku' => $sku->sku,
-                        'barcode' => $sku->barcode,
-                        'price' => $sku->sale_price,
-                        'stock_quantity' => $sku->getCurrentStock(),
-                        'product_id' => $product->id
-                    ];
-                });
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'barcode' => $product->barcode,
+                    'price' => $product->sale_price,
+                    'stock_quantity' => $product->getCurrentStock(),
+                    'product_id' => $product->id
+                ];
             });
-
         return response()->json(['data' => $products]);
     }
 

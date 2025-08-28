@@ -17,12 +17,11 @@ class OrderItemFactory extends Factory
     public function definition(): array
     {
         return [
-            'sale_id' => 1, // Will be overridden in tests
-            'product_variant_id' => 1, // Will be overridden in tests
+            'sale_id' => 1,
+            'product_id' => 1,
             'quantity' => $this->faker->numberBetween(1, 10),
             'unit_price' => $this->faker->randomFloat(2, 10, 500),
             'total_price' => fn(array $attributes) => $attributes['quantity'] * $attributes['unit_price'],
-            'status' => $this->faker->randomElement(['pending', 'processing', 'completed', 'failed']),
         ];
     }
 }

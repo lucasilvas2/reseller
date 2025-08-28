@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 
@@ -43,24 +42,6 @@ class Store extends Model
     public function clients(): HasMany
     {
         return $this->hasMany(Client::class);
-    }
-
-    /**
-     * Get the product variants for the store.
-     * @return HasMany
-     */
-    public function productVariants(): HasMany
-    {
-        return $this->hasMany(ProductVariant::class);
-    }
-
-    /**
-     * Alias para compatibilidade (remover após refatoração completa)
-     * @return HasMany
-     */
-    public function productSkus(): HasMany
-    {
-        return $this->productVariants();
     }
 
     /**

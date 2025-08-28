@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use App\Models\Product;
 use App\Models\Brand;
-use App\Models\ProductVariant;
 use App\Models\Store;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -54,22 +53,6 @@ class ProductModelTest extends TestCase
 
         $this->assertInstanceOf(Store::class, $product->store);
         $this->assertEquals($store->id, $product->store->id);
-    }
-
-    public function test_product_has_many_variants(): void
-    {
-        $store = Store::factory()->create();
-        $product = Product::factory()->create(['store_id' => $store->id]);
-
-        $variants = ProductVariant::factory()
-            ->count(3)
-            ->create([
-                'product_id' => $product->id,
-                'store_id' => $store->id
-            ]);
-
-        $this->assertCount(3, $product->variants);
-        $this->assertInstanceOf(ProductVariant::class, $product->variants->first());
     }
 
     public function test_product_factory_creates_valid_data(): void

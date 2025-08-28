@@ -117,7 +117,6 @@ class UserController extends Controller
             'password' => 'sometimes|min:5|confirmed',
         ]);
 
-        // Gerar senha aleatória se não fornecida
         $password = $request->get('password', \Illuminate\Support\Str::random(16));
 
         $user = $this->userModel->create([
@@ -167,7 +166,6 @@ class UserController extends Controller
             'store_id' => $request->get('store'),
         ]);
 
-        // Sincronizar roles (remove os antigos e adiciona o novo)
         $role = $this->roleModel->findById($request->get('role'));
         $user->syncRoles([$role]);
 

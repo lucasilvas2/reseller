@@ -1,4 +1,4 @@
-# Arquitetura do Sistema - Dealer Management System
+# Arquitetura do Sistema - Reseller Management System
 
 ## 📐 Visão Geral da Arquitetura Enterprise
 
@@ -158,26 +158,25 @@ Scheduled Job ──► RecoverPendingSalesJob ──► Find orphaned Sales {
 ### Core Tables Structure
 ```sql
 ┌─────────────────────────────────────────────────────────────┐
-│                    Database Schema                          │
+│                    Database Schema (REFATORADO)             │
 ├─────────────────────────────────────────────────────────────┤
 │ sales                           order_items                 │
 │ ├─ id (PK)                     ├─ id (PK)                   │
 │ ├─ client_id (FK)              ├─ sale_id (FK)              │
-│ ├─ store_id (FK)               ├─ product_sku_id (FK)       │
+│ ├─ store_id (FK)               ├─ product_id (FK) ⬅️ NOVO   │
 │ ├─ status (enum)               ├─ quantity                  │
 │ ├─ total_amount                ├─ unit_price                │
 │ └─ created_at                  ├─ total_price               │
-│                                ├─ status (enum)             │
-│                                └─ error_message             │
+│                                └─ created_at                │
 ├─────────────────────────────────────────────────────────────┤
-│ stock_movements                 products_skus               │
+│ stock_movements                 products (CONSOLIDADO)     │
 │ ├─ id (PK)                     ├─ id (PK)                   │
-│ ├─ product_sku_id (FK)         ├─ product_id (FK)           │
-│ ├─ store_id (FK)               ├─ sku_code                  │
-│ ├─ type ('in'/'out')           ├─ price                     │
-│ ├─ quantity                    └─ active                    │
-│ ├─ reference_type              │                            │
-│ ├─ reference_id                │                            │
+│ ├─ product_id (FK) ⬅️ NOVO     ├─ name, description         │
+│ ├─ store_id (FK)               ├─ sku, barcode ⬅️ NOVO      │
+│ ├─ type ('in'/'out')           ├─ cost_price, sale_price ⬅️ │
+│ ├─ quantity                    ├─ brand_id (FK)             │
+│ ├─ reference_type              ├─ store_id (FK)             │
+│ ├─ reference_id                └─ active                    │
 │ └─ created_at                  │                            │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -240,7 +239,7 @@ User ──┬─ Sales ──┬─ OrderItems ──► ProductsSku ──► 
 │ └─ Password Reset Flow                                      │
 ├─────────────────────────────────────────────────────────────┤
 │ Spatie Laravel Permission                                   │
-│ ├─ Roles: admin, dealer, user                              │
+│ ├─ Roles: admin, reseller, user                              │
 │ ├─ Permissions: manage_sales, view_reports, etc.           │
 │ └─ Multi-tenant isolation by store_id                      │
 ├─────────────────────────────────────────────────────────────┤
@@ -257,7 +256,7 @@ User ──┬─ Sales ──┬─ OrderItems ──► ProductsSku ──► 
 // Global scope for multi-tenancy
 class StoreScope implements Scope {
     public function apply(Builder $builder, Model $model) {
-        if (auth()->user()->hasRole('dealer')) {
+        if (auth()->user()->hasRole('reseller')) {
             $builder->where('store_id', auth()->user()->store_id);
         }
     }

@@ -1,4 +1,4 @@
-# Documentação Técnica - Dealer Management System
+# Documentação Técnica - Reseller Management System
 
 ## 📋 Caracterização do Projeto
 

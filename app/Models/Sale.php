@@ -49,6 +49,22 @@ class Sale extends Model
         return $this->belongsTo(Store::class);
     }
 
+    /**
+     * Get all failure records for this sale
+     */
+    public function failures(): HasMany
+    {
+        return $this->hasMany(SaleItemFailure::class, 'sale_id');
+    }
+
+    /**
+     * Get stock movements related to this sale
+     */
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class, 'sale_id');
+    }
+
     // Scopes para filtros
     public function scopeByStatus($query, $status)
     {
@@ -115,74 +131,73 @@ class Sale extends Model
     public function calculateProfitMargin(): float
     {
         $totalCost = $this->orderItems->sum(function($item) {
-            return ($item->productVariant->cost_price ?? 0) * $item->quantity;
+            return $item->quantity * $item->product->cost_price; // Agora via product direto
         });
 
         $totalProfit = $this->orderItems->sum(function($item) {
-            $costPrice = $item->productVariant->cost_price ?? 0;
-            $salePrice = $item->unit_price ?? 0;
-            return ($salePrice - $costPrice) * $item->quantity;
+            return $item->quantity * ($item->product->sale_price - $item->product->cost_price);
         });
 
         return $totalCost > 0 ? ($totalProfit / $totalCost) * 100 : 0;
     }
 
+    // ✅ ABORDAGEM HÍBRIDA: Status da venda + rastreamento detalhado de failures
+
     /**
-     * Atualizar status da venda baseado no status dos OrderItems
-     * ✅ Otimizado com single query
+     * Check if sale has any unresolved failures
      */
-    public function updateStatusFromItems(): string
+    public function hasUnresolvedFailures(): bool
     {
-        // ✅ Single query para buscar estatísticas
-        $statusCounts = $this->orderItems()
-            ->selectRaw('status, COUNT(*) as count')
-            ->groupBy('status')
-            ->pluck('count', 'status')
-            ->toArray();
-
-        $totalItems = array_sum($statusCounts);
-        $completedItems = $statusCounts['completed'] ?? 0;
-        $failedItems = $statusCounts['failed'] ?? 0;
-        $processingItems = $statusCounts['processing'] ?? 0;
-
-        // ✅ Lógica mais clara e performática
-        $newStatus = match(true) {
-            $totalItems === 0 => 'pending',                 // Nenhum item ainda
-            $failedItems > 0 => 'failed',                   // Qualquer falha = venda falha
-            $completedItems === $totalItems => 'completed', // Todos completos = sucesso
-            $processingItems > 0 => 'processing',           // Algum item processando
-            default => 'pending'                            // Padrão = pendente
-        };
-
-        $this->update(['status' => $newStatus]);
-        return $newStatus;
+        return $this->failures()->unresolved()->exists();
     }
 
+    /**
+     * Get failed items via SaleItemFailure (híbrido)
+     */
     public function getFailedItems()
     {
-        return $this->orderItems()->failed()->get();
+        return $this->failures()->unresolved()->with('orderItem')->get();
     }
 
+    /**
+     * Check if sale can be retried
+     */
     public function canRetry(): bool
     {
-        return $this->status === 'failed' && $this->orderItems()->failed()->exists();
+        return $this->status === 'failed' && $this->hasUnresolvedFailures();
     }
 
-    public function getItemsStatusSummary(): array
+    /**
+     * Get summary of sale processing status
+     */
+    public function getProcessingSummary(): array
     {
-        // ✅ Single query otimizada em vez de 5 queries separadas
-        $statusCounts = $this->orderItems()
-            ->selectRaw('status, COUNT(*) as count')
-            ->groupBy('status')
-            ->pluck('count', 'status')
-            ->toArray();
+        $failureCount = $this->failures()->unresolved()->count();
+        $totalItems = $this->orderItems->count();
 
         return [
-            'total' => array_sum($statusCounts),
-            'pending' => $statusCounts['pending'] ?? 0,
-            'processing' => $statusCounts['processing'] ?? 0,
-            'completed' => $statusCounts['completed'] ?? 0,
-            'failed' => $statusCounts['failed'] ?? 0,
+            'total_items' => $totalItems,
+            'failed_items' => $failureCount,
+            'success_items' => $totalItems - $failureCount,
+            'success_rate' => $totalItems > 0 ? (($totalItems - $failureCount) / $totalItems) * 100 : 100,
+            'has_failures' => $failureCount > 0
         ];
+    }
+
+    /**
+     * Create failure record for this sale
+     */
+    public function createFailure(OrderItem $orderItem, string $type, string $message, array $context = []): SaleItemFailure
+    {
+        return $this->failures()->create([
+            'order_item_id' => $orderItem->id,
+            'product_id' => $orderItem->product_id,
+            'failure_type' => $type,
+            'error_message' => $message,
+            'error_context' => $context,
+            'attempted_at' => now(),
+            'attempt_number' => 1,
+            'store_id' => $this->store_id
+        ]);
     }
 }

@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\Sale;
 use App\Models\OrderItem;
-use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -77,17 +76,17 @@ class ValidateSalesImplementation extends Command
 
         // Produtos com estoque negativo (baseado em StockMovements)
         $negativeStockQuery = "
-            SELECT product_sku_id
+            SELECT product_id
             FROM stock_movements
-            GROUP BY product_sku_id
+            GROUP BY product_id
             HAVING SUM(CASE WHEN type = 'in' THEN quantity ELSE -quantity END) < 0
         ";
 
         $negativeStockProducts = DB::table('products_skus')
             ->whereIn('id', function($query) {
-                $query->select('product_sku_id')
+                $query->select('product_id')
                       ->from('stock_movements')
-                      ->groupBy('product_sku_id')
+                      ->groupBy('product_id')
                       ->havingRaw('SUM(CASE WHEN type = "in" THEN quantity ELSE -quantity END) < 0');
             })->count();
 

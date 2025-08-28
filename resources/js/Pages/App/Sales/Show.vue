@@ -1,22 +1,57 @@
 <template>
-    <AppLayout title="Sale Details">
+    <AppSidebarLayout title="Sale Details">
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Sale Details #{{ sale.id }}
-                </h2>
-                <div class="flex space-x-3">
-                    <a :href="route('sales.index')"
-                       class="text-gray-600 hover:text-gray-900 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-md">
-                        ← Back to List
-                    </a>
-                    <a :href="route('sales.edit', sale.id)"
-                       class="text-blue-600 hover:text-blue-900 text-sm bg-blue-100 hover:bg-blue-200 px-3 py-2 rounded-md">
-                        Edit Sale
-                    </a>
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4">
+                    <!-- Breadcrumb e Título -->
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0 flex-1">
+                            <!-- Breadcrumb -->
+                            <nav class="flex mb-2" aria-label="Breadcrumb">
+                                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                                    <li class="inline-flex items-center">
+                                        <Link :href="route('sales.index')" class="text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                            Sales
+                                        </Link>
+                                    </li>
+                                    <li aria-current="page">
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            <span class="ml-1 text-sm font-medium text-gray-700 dark:text-gray-300">Show</span>
+                                        </div>
+                                    </li>
+                                </ol>
+                            </nav>
+
+                            <!-- Título -->
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                                Sale Details #{{ sale.id }}
+                            </h1>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="ml-4 flex items-center space-x-3">
+                            <Link :href="route('sales.index')"
+                               class="text-gray-600 hover:text-gray-900 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-md">
+                                ← Back to List
+                            </Link>
+                            <Link :href="route('sales.edit', sale.id)"
+                               class="text-blue-600 hover:text-blue-900 text-sm bg-blue-100 hover:bg-blue-200 px-3 py-2 rounded-md">
+                                Edit Sale
+                            </Link>
+                        </div>
+                    </div>
+
+                    <!-- Stats Row -->
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-4 gap-4">
+
+                    </div>
                 </div>
             </div>
         </template>
+
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -263,23 +298,23 @@
                                                     </div>
                                                     <div>
                                                         <div class="text-sm font-medium text-gray-900">
-                                                            {{ item.product_variant?.product?.name || 'N/A' }}
+                                                            {{ item.product?.name || 'N/A' }}
                                                         </div>
                                                         <div class="text-sm text-gray-500">
-                                                            {{ item.product_variant?.product?.brand?.name || 'No Brand' }}
+                                                            {{ item.product?.brand?.name || 'No Brand' }}
                                                         </div>
-                                                        <div v-if="item.product_variant?.product?.description" class="text-xs text-gray-400 mt-1 max-w-xs truncate">
-                                                            {{ item.product_variant?.product?.description }}
+                                                        <div v-if="item.product?.description" class="text-xs text-gray-400 mt-1 max-w-xs truncate">
+                                                            {{ item.product?.description }}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td class="px-6 py-4">
                                                 <div class="text-sm text-gray-900">
-                                                    <span class="font-medium">SKU:</span> {{ item.product_variant?.sku || 'N/A' }}
+                                                    <span class="font-medium">SKU:</span> {{ item.product?.sku || 'N/A' }}
                                                 </div>
-                                                <div v-if="item.product_variant?.barcode" class="text-sm text-gray-500">
-                                                    <span class="font-medium">Barcode:</span> {{ item.product_variant?.barcode }}
+                                                <div v-if="item.product?.barcode" class="text-sm text-gray-500">
+                                                    <span class="font-medium">Barcode:</span> {{ item.product?.barcode }}
                                                 </div>
                                             </td>
                                             <td class="px-6 py-4 text-center">
@@ -288,7 +323,7 @@
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 text-right text-sm text-gray-500">
-                                                R$ {{ formatPrice(item.product_variant?.cost_price || 0) }}
+                                                R$ {{ formatPrice(item.product?.cost_price || 0) }}
                                             </td>
                                             <td class="px-6 py-4 text-right text-sm font-medium text-gray-900">
                                                 R$ {{ formatPrice(item.unit_price) }}
@@ -460,7 +495,7 @@
                                     :key="item.id"
                                     class="text-sm text-red-700 flex justify-between"
                                 >
-                                    <span>{{ item.product_variant?.product?.name || 'N/A' }}</span>
+                                    <span>{{ item.product?.name || 'N/A' }}</span>
                                     <span class="text-xs text-red-600">{{ item.error_message }}</span>
                                 </div>
                             </div>
@@ -469,15 +504,15 @@
 
                     <!-- Action Buttons -->
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between">
-                        <a :href="route('sales.index')"
+                        <Link :href="route('sales.index')"
                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
                             Back to List
-                        </a>
+                        </Link>
                         <div class="flex space-x-3">
-                            <a :href="route('sales.edit', sale.id)"
+                            <Link :href="route('sales.edit', sale.id)"
                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                 Edit Sale
-                            </a>
+                            </Link>
                             <button v-if="sale.status === 'pending'" @click="markAsPaid"
                                     class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
                                 Mark as Paid
@@ -491,17 +526,20 @@
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </AppSidebarLayout>
 </template>
 
 <script>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import StatusBadge from "@/Components/UI/StatusBadge.vue";
 import LoadingState from "@/Components/UI/LoadingState.vue";
-import { router } from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
+import AppSidebarLayout from "@/Layouts/AppSidebarLayout.vue";
 
 export default {
     components: {
+        Link,
+        AppSidebarLayout,
         AppLayout,
         StatusBadge,
         LoadingState,
@@ -520,35 +558,8 @@ export default {
     },
     computed: {
         orderItems() {
-            // Compatibilidade com ambas as estruturas: order_items ou items
-            const items = this.sale.order_items || this.sale.items || [];
-
-            // Normalizar formato dos dados se necessário
-            return items.map(item => {
-                // Se o item já tem product_variant, retorna como está
-                if (item.product_variant) {
-                    return item;
-                }
-
-                // Se não tem product_variant, cria a estrutura esperada baseada nos dados disponíveis
-                return {
-                    ...item,
-                    product_variant: {
-                        sku: item.sku || 'N/A',
-                        barcode: null,
-                        cost_price: 0, // Valor padrão pois não está no JSON original
-                        sale_price: item.unit_price || 0,
-                        products: {
-                            name: item.product_name || 'N/A',
-                            description: null,
-                            brand: {
-                                name: 'No Brand'
-                            }
-                        }
-                    }
-                };
-            });
-        }
+            return this.sale.order_items || this.sale.items || [];
+        },
     },
     methods: {
         formatDate(dateString) {
@@ -578,7 +589,6 @@ export default {
             };
             return classes[status] || 'bg-gray-100 text-gray-800';
         },
-        // Cálculos simples mantidos no frontend para responsividade
         getTotalItems() {
             if (!this.orderItems) return 0;
             return this.orderItems.reduce((total, item) => total + item.quantity, 0);
@@ -587,8 +597,6 @@ export default {
             if (!this.orderItems) return 0;
             return this.orderItems.reduce((total, item) => total + (item.quantity * item.unit_price), 0);
         },
-
-        // Cálculos complexos/sensíveis vindos do backend
         getTotalProfit() {
             return this.sale.financial_summary?.total_profit || 0;
         },
@@ -608,7 +616,7 @@ export default {
             return this.sale.financial_summary?.most_profitable_item_value || 0;
         },
         getItemProfit(item) {
-            const costPrice = parseFloat(item.product_variant?.cost_price || 0);
+            const costPrice = parseFloat(item.product?.cost_price || 0);
             const salePrice = parseFloat(item.unit_price || 0);
             return (salePrice - costPrice) * item.quantity;
         },
@@ -660,8 +668,6 @@ export default {
                 router.delete(route('sales.destroy', this.sale.id));
             }
         },
-
-        // Novos métodos para Fase 4
         hasFailedItems() {
             if (!this.orderItems) return false;
             return this.orderItems.some(item => item.status === 'failed');

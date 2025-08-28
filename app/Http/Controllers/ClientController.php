@@ -28,7 +28,6 @@ class ClientController extends Controller
             ->where('store_id', Auth::user()->store_id)
             ->with('user');
 
-        // Apply search filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('user', function ($q) use ($search) {
@@ -38,21 +37,18 @@ class ClientController extends Controller
             });
         }
 
-        // Apply name filter
         if ($request->filled('name')) {
             $query->whereHas('user', function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->name}%");
             });
         }
 
-        // Apply email filter
         if ($request->filled('email')) {
             $query->whereHas('user', function ($q) use ($request) {
                 $q->where('email', 'like', "%{$request->email}%");
             });
         }
 
-        // Apply date filters
         if ($request->filled('date_from')) {
             $query->where('created_at', '>=', $request->date_from);
         }
@@ -61,7 +57,6 @@ class ClientController extends Controller
             $query->where('created_at', '<=', $request->date_to . ' 23:59:59');
         }
 
-        // Apply sorting
         $sortKey = $request->get('sort', 'created_at');
         $sortOrder = $request->get('order', 'desc');
 
@@ -73,11 +68,9 @@ class ClientController extends Controller
             $query->orderBy($sortKey, $sortOrder);
         }
 
-        // Get paginated results
         $perPage = $request->get('per_page', 10);
         $clients = $query->paginate($perPage);
 
-        // Transform data for frontend
         $transformedData = collect($clients->items())->map(function ($client) {
             return [
                 'id' => $client->id,

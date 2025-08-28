@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockMovement extends Model
 {
@@ -11,7 +12,7 @@ class StockMovement extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_sku_id',
+        'product_id',
         'quantity',
         'type',
         'user_id',
@@ -21,39 +22,33 @@ class StockMovement extends Model
         'sale_id',
     ];
 
-    public function productVariant()
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+        return $this->belongsTo(Product::class, 'product_id');
     }
 
-    // Alias para compatibilidade (remover após refatoração completa)
-    public function productSku()
-    {
-        return $this->productVariant();
-    }
-
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function sale()
+    public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class, 'sale_id');
     }
 
-    public function orderItem()
+    public function orderItem(): BelongsTo
     {
         return $this->belongsTo(OrderItem::class, 'order_item_id');
     }
 
-    public function store()
+    public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class, 'store_id');
     }
 
     /**
-     * 🔄 Invalidar cache de estoque quando movimento é criado/atualizado
+     * Invalidar cache de estoque quando movimento é criado/atualizado
      */
     protected static function boot()
     {
@@ -73,7 +68,7 @@ class StockMovement extends Model
     }
 
     /**
-     * 🗑️ Invalidar cache do produto relacionado
+     * Invalidar cache do produto relacionado
      */
     private function invalidateProductStockCache(): void
     {

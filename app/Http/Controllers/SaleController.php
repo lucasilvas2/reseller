@@ -7,7 +7,6 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\OrderItem;
-use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use App\Contracts\SaleProcessor;
 use Illuminate\Http\Request;
@@ -20,7 +19,6 @@ class SaleController extends Controller
     protected Sale $sale;
     protected Client $client;
     protected Product $product;
-    protected ProductVariant $productVariant;
     protected StockMovement $stockMovement;
     protected SaleProcessor $saleProcessor;
 
@@ -28,14 +26,12 @@ class SaleController extends Controller
         Sale $sale,
         Product $product,
         Client $client,
-        ProductVariant $productVariant,
         StockMovement $stockMovement,
         SaleProcessor $saleProcessor
     ) {
         $this->sale = $sale;
         $this->product = $product;
         $this->client = $client;
-        $this->productVariant = $productVariant;
         $this->stockMovement = $stockMovement;
         $this->saleProcessor = $saleProcessor;
     }
@@ -43,7 +39,7 @@ class SaleController extends Controller
     public function index(Request $request)
     {
         $query = $this->sale->where('store_id', Auth::user()->store_id)
-            ->with(['client', 'orderItems.productVariant.products']);
+            ->with(['client', 'orderItems.product.brand']);
 
         if($request->filled('search')) {
             $search = $request->search;
@@ -87,8 +83,8 @@ class SaleController extends Controller
                 'status' => $sale->status,
                 'products' => $sale->orderItems->map(function ($orderItem) {
                     return [
-                        'id' => $orderItem->productVariant->product->id,
-                        'name' => $orderItem->productVariant->product->name,
+                        'id' => $orderItem->product->id,
+                        'name' => $orderItem->product->name,
                         'quantity' => $orderItem->quantity,
                         'price' => $orderItem->unit_price,
                     ];
@@ -139,9 +135,8 @@ class SaleController extends Controller
 
         // Buscar produtos com SKUs e estoque
         $products = $this->product->where('store_id', $storeId)
-            ->with(['variants' => function($query) use ($storeId) {
-                $query->where('store_id', $storeId)
-                      ->with('stockMovements');
+            ->with(['stockMovements' => function($query) use ($storeId) {
+                $query->where('store_id', $storeId);
             }])
             ->get()
             ->map(function ($product) {
@@ -151,26 +146,23 @@ class SaleController extends Controller
                     'description' => $product->description,
                     'category' => $product->category ?? 'Sem categoria',
                     'brand_name' => $product->brand->name ?? 'Sem marca',
-                    'skus' => $product->variants->map(function ($sku) {
-                        $currentStock = $sku->getCurrentStock();
-                        return [
-                            'id' => $sku->id,
-                            'sku' => $sku->sku,
-                            'barcode' => $sku->barcode,
-                            'cost_price' => $sku->cost_price,
-                            'sale_price' => $sku->sale_price,
-                            'current_stock' => $currentStock,
-                            'formatted_cost_price' => $sku->formatted_cost_price,
-                            'formatted_sale_price' => $sku->formatted_sale_price,
-                            'margin' => $sku->margin,
-                            'is_available' => $currentStock > 0,
-                        ];
-                    })
+                    'sku' => $product->sku,
+                    'barcode' => $product->barcode,
+                    'cost_price' => $product->cost_price,
+                    'sale_price' => $product->sale_price,
+                    'formatted_cost_price' => $product->formatted_cost_price,
+                    'formatted_sale_price' => $product->formatted_sale_price,
+                    'margin' => $product->margin,
+                    'current_stock' => $product->getCurrentStock(),
+                    'is_available' => $product->getCurrentStock() > 0,
+                    'image_url' => $product->image_url ?? null,
+                    'created_at' => $product->created_at->format('Y-m-d H:i:s'),
+                    'updated_at' => $product->updated_at->format('Y-m-d H:i:s')
                 ];
             })
             ->filter(function ($product) {
                 // Filtrar produtos que têm pelo menos um SKU disponível
-                return $product['skus']->where('is_available', true)->count() > 0;
+                return $product['is_available'] == true;
             });
 
         return Inertia::render('App/Sales/Create', [
@@ -187,7 +179,6 @@ class SaleController extends Controller
 
         try {
             return DB::transaction(function () use ($validated) {
-                // Criar a venda
                 $sale = $this->sale->create([
                     'user_id' => Auth::user()->id,
                     'client_id' => $validated['client_id'],
@@ -197,11 +188,10 @@ class SaleController extends Controller
                     'notes' => $validated['notes'] ?? null,
                 ]);
 
-                // Criar os itens da venda
                 foreach ($validated['items'] as $item) {
                     OrderItem::create([
                         'sale_id' => $sale->id,
-                        'product_variant_id' => $item['product_variant_id'],
+                        'product_id' => $item['product_id'],
                         'quantity' => $item['quantity'],
                         'unit_price' => $item['unit_price'],
                         'total_price' => $item['total_price'],
@@ -209,10 +199,8 @@ class SaleController extends Controller
                     ]);
                 }
 
-                // Processar a venda usando o SaleProcessor
                 $this->saleProcessor->process($sale);
 
-                // Retornar resposta de sucesso
                 return redirect()->route('sales.show', $sale->id)
                     ->with('success', 'Venda criada com sucesso!');
             });
@@ -229,18 +217,15 @@ class SaleController extends Controller
      */
     public function retry(Sale $sale)
     {
-        // Verificar se a venda pertence à loja do usuário
         if ($sale->store_id !== Auth::user()->store_id) {
             abort(403, 'Acesso negado.');
         }
 
-        // Verificar se a venda pode ser reprocessada
         if (!$sale->canRetry()) {
             return back()->withErrors(['error' => 'Esta venda não pode ser reprocessada.']);
         }
 
         try {
-            // Reprocessar usando o SaleProcessor
             $this->saleProcessor->retry($sale->id);
 
             return redirect()->route('sales.show', $sale->id)
@@ -254,19 +239,16 @@ class SaleController extends Controller
 
     public function show(Sale $sale)
     {
-        // Verificar se a venda pertence à loja do usuário
         if ($sale->store_id !== Auth::user()->store_id) {
             abort(403, 'Acesso negado.');
         }
 
-        // Carregar relacionamentos necessários com todos os dados
         $sale->load([
             'client.user',
-            'orderItems.productVariant.products.brand',
+            'orderItems.product.brand',
             'store'
         ]);
 
-        // Transformar dados para o frontend
         $saleData = [
             'id' => $sale->id,
             'status' => $sale->status,
@@ -291,8 +273,7 @@ class SaleController extends Controller
             ],
             'order_items' => $sale->orderItems->map(function ($item) {
                 // Verificar se os relacionamentos existem antes de acessá-los
-                $productVariant = $item->productVariant;
-                $product = $productVariant ? $productVariant->product : null;
+                $product = $item->product;
                 $brand = $product && $product->brand ? $product->brand : null;
 
                 return [
@@ -300,21 +281,17 @@ class SaleController extends Controller
                     'quantity' => $item->quantity,
                     'unit_price' => $item->unit_price,
                     'total_price' => $item->total_price,
-                    'status' => $item->status ?? 'pending',
-                    'product_sku' => [
-                        'id' => $productVariant ? $productVariant->id : null,
-                        'sku' => $productVariant ? ($productVariant->sku ?? 'N/A') : 'N/A',
-                        'barcode' => $productVariant ? ($productVariant->barcode ?? null) : null,
-                        'cost_price' => $productVariant ? ($productVariant->cost_price ?? 0) : 0,
-                        'sale_price' => $productVariant ? ($productVariant->sale_price ?? 0) : 0,
-                        'products' => [
-                            'id' => $product ? $product->id : null,
-                            'name' => $product ? ($product->name ?? 'N/A') : 'N/A',
-                            'description' => $product ? ($product->description ?? null) : null,
-                            'brand' => [
-                                'id' => $brand ? $brand->id : null,
-                                'name' => $brand ? $brand->name : 'No Brand',
-                            ]
+                    'product' => [
+                        'id' => $product ? $product->id : null,
+                        'name' => $product ? ($product->name ?? 'N/A') : 'N/A',
+                        'description' => $product ? ($product->description ?? null) : null,
+                        'sku' => $product ? ($product->sku ?? 'N/A') : 'N/A',
+                        'barcode' => $product ? ($product->barcode ?? null) : null,
+                        'cost_price' => $product ? ($product->cost_price ?? 0) : 0,
+                        'sale_price' => $product ? ($product->sale_price ?? 0) : 0,
+                        'brand' => [
+                            'id' => $brand ? $brand->id : null,
+                            'name' => $brand ? $brand->name : 'No Brand',
                         ]
                     ]
                 ];
@@ -328,10 +305,10 @@ class SaleController extends Controller
             ],
             'financial_summary' => [
                 'total_cost' => $sale->orderItems->sum(function($item) {
-                    return ($item->productVariant->cost_price ?? 0) * $item->quantity;
+                    return ($item->product->cost_price ?? 0) * $item->quantity;
                 }),
                 'total_profit' => $sale->orderItems->sum(function($item) {
-                    $costPrice = $item->productVariant->cost_price ?? 0;
+                    $costPrice = $item->product->cost_price ?? 0;
                     $salePrice = $item->unit_price ?? 0;
                     return ($salePrice - $costPrice) * $item->quantity;
                 }),
@@ -339,7 +316,7 @@ class SaleController extends Controller
                 'average_item_price' => $sale->orderItems->avg('unit_price'),
                 'highest_item_value' => $sale->orderItems->max('total_price'),
                 'most_profitable_item_value' => $sale->orderItems->max(function($item) {
-                    $costPrice = $item->productVariant->cost_price ?? 0;
+                    $costPrice = $item->product->cost_price ?? 0;
                     $salePrice = $item->unit_price ?? 0;
                     return ($salePrice - $costPrice) * $item->quantity;
                 }),

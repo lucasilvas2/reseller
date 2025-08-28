@@ -15,7 +15,6 @@ class SaleSeeder extends Seeder
         $sales = \App\Models\Sale::factory(50)->create();
         $this->command->info('50 sales created successfully.');
 
-        // Optionally, you can associate sales with clients and stores
         foreach ($sales as $sale) {
             $client = \App\Models\Client::inRandomOrder()->first();
             $store = \App\Models\Store::inRandomOrder()->first();

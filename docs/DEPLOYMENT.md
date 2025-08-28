@@ -1,4 +1,4 @@
-# Guia de Deploy - Dealer Management System Enterprise
+# Guia de Deploy - Reseller Management System Enterprise
 
 ## 🚀 Ambientes de Deploy
 
@@ -14,8 +14,8 @@
 #### Setup Rápido (SQLite + Database Cache)
 ```bash
 # 1. Clone e dependências
-git clone <repository-url> dealer
-cd dealer
+git clone <repository-url> reseller
+cd reseller
 composer install
 npm install && npm run build
 
@@ -55,7 +55,7 @@ composer run dev  # Inclui workers automáticos
 
 #### Configuração .env (Desenvolvimento Simples)
 ```env
-APP_NAME="Dealer Management"
+APP_NAME="Reseller Management"
 APP_ENV=local
 APP_DEBUG=true
 APP_TIMEZONE="America/Sao_Paulo"
@@ -85,7 +85,7 @@ FILESYSTEM_DISK=local
 
 #### Configuração .env (Desenvolvimento Enterprise)
 ```env
-APP_NAME="Dealer Management"
+APP_NAME="Reseller Management"
 APP_ENV=local
 APP_DEBUG=true
 APP_URL=http://localhost:8000
@@ -94,7 +94,7 @@ APP_URL=http://localhost:8000
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3326
-DB_DATABASE=dealer
+DB_DATABASE=reseller
 DB_USERNAME=admin
 DB_PASSWORD=admin
 
@@ -133,7 +133,7 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: dealer
+      MYSQL_DATABASE: reseller
       MYSQL_USER: admin
       MYSQL_PASSWORD: admin
     ports:
@@ -143,7 +143,7 @@ services:
 
   redis:
     image: redis:7.2-alpine
-    container_name: "dealer-redis"
+    container_name: "reseller-redis"
     ports:
       - "6380:6379"
     command: redis-server --appendonly yes --requirepass ""
@@ -281,8 +281,8 @@ sudo systemctl enable supervisor
 sudo systemctl start supervisor
 
 # 6. Application deployment directory
-sudo mkdir -p /var/www/dealer
-sudo chown ec2-user:nginx /var/www/dealer
+sudo mkdir -p /var/www/reseller
+sudo chown ec2-user:nginx /var/www/reseller
 
 # 7. PHP-FPM optimizations for sales processing
 sudo sed -i 's/pm.max_children = 50/pm.max_children = 100/g' /etc/php-fpm.d/www.conf
@@ -295,24 +295,24 @@ echo "* hard nofile 65536" | sudo tee -a /etc/security/limits.conf
 
 #### .env Produção (Enterprise)
 ```env
-APP_NAME="Dealer Management"
+APP_NAME="Reseller Management"
 APP_ENV=production
 APP_DEBUG=false
 APP_TIMEZONE="America/Sao_Paulo"
-APP_URL=https://dealer.yourdomain.com
+APP_URL=https://reseller.yourdomain.com
 
 # Database (RDS MySQL)
 DB_CONNECTION=mysql
-DB_HOST=dealer-db.xxxxx.us-east-1.rds.amazonaws.com
+DB_HOST=reseller-db.xxxxx.us-east-1.rds.amazonaws.com
 DB_PORT=3306
-DB_DATABASE=dealer
+DB_DATABASE=reseller
 DB_USERNAME=admin
 DB_PASSWORD=your-secure-password
 
 # Cache (ElastiCache Redis)
 CACHE_STORE=redis
 SESSION_DRIVER=redis
-REDIS_HOST=dealer-cache.xxxxx.cache.amazonaws.com
+REDIS_HOST=reseller-cache.xxxxx.cache.amazonaws.com
 REDIS_PORT=6379
 
 # Queue (SQS - Enterprise Configuration)
@@ -334,7 +334,7 @@ SALES_RECOVERY_TIME=300
 AWS_ACCESS_KEY_ID=AKIAXXXXXXXXXXXXXXXX
 AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 AWS_DEFAULT_REGION=us-east-1
-AWS_BUCKET=dealer-uploads
+AWS_BUCKET=reseller-uploads
 
 # Email (SES)
 MAIL_MAILER=ses
@@ -436,7 +436,7 @@ jobs:
             ln -nfs /var/www/releases/$RELEASE /var/www/current
             
             # Restart services gracefully
-            sudo supervisorctl restart dealer-workers:*
+            sudo supervisorctl restart reseller-workers:*
             sudo systemctl reload php-fpm
             sudo systemctl reload nginx
             
@@ -501,7 +501,7 @@ php artisan migrate --force || {
 # 7. Restart services gracefully
 echo "🔄 Restarting services..."
 php artisan queue:restart
-sudo supervisorctl restart dealer-workers:*
+sudo supervisorctl restart reseller-workers:*
 sudo systemctl reload php-fpm nginx
 
 # 8. Post-deployment validation
@@ -526,78 +526,78 @@ echo "📊 System ready for high-demand processing"
 
 ### Supervisor Configuration (Alta Demanda)
 ```ini
-# /etc/supervisor/conf.d/dealer-workers.conf
-[group:dealer-workers]
-programs=dealer-high-priority,dealer-retry,dealer-recovery,dealer-monitor
+# /etc/supervisor/conf.d/reseller-workers.conf
+[group:reseller-workers]
+programs=reseller-high-priority,reseller-retry,reseller-recovery,reseller-monitor
 
-[program:dealer-high-priority]
+[program:reseller-high-priority]
 process_name=%(program_name)s_%(process_num)02d
-command=php /var/www/dealer/artisan queue:work sqs --queue=sales-high-priority --sleep=1 --tries=2 --max-jobs=100 --memory=512
-directory=/var/www/dealer
+command=php /var/www/reseller/artisan queue:work sqs --queue=sales-high-priority --sleep=1 --tries=2 --max-jobs=100 --memory=512
+directory=/var/www/reseller
 autostart=true
 autorestart=true
 user=www-data
 numprocs=5
 redirect_stderr=true
-stdout_logfile=/var/www/dealer/storage/logs/worker-high-%(process_num)02d.log
+stdout_logfile=/var/www/reseller/storage/logs/worker-high-%(process_num)02d.log
 stdout_logfile_maxbytes=10MB
 stdout_logfile_backups=3
 
-[program:dealer-retry]
+[program:reseller-retry]
 process_name=%(program_name)s_%(process_num)02d
-command=php /var/www/dealer/artisan queue:work sqs --queue=sales-retry --sleep=3 --tries=1 --max-jobs=50 --memory=256
-directory=/var/www/dealer
+command=php /var/www/reseller/artisan queue:work sqs --queue=sales-retry --sleep=3 --tries=1 --max-jobs=50 --memory=256
+directory=/var/www/reseller
 autostart=true
 autorestart=true
 user=www-data
 numprocs=2
 redirect_stderr=true
-stdout_logfile=/var/www/dealer/storage/logs/worker-retry-%(process_num)02d.log
+stdout_logfile=/var/www/reseller/storage/logs/worker-retry-%(process_num)02d.log
 
-[program:dealer-recovery]
+[program:reseller-recovery]
 process_name=%(program_name)s_%(process_num)02d
-command=php /var/www/dealer/artisan queue:work sqs --queue=sales-recovery --sleep=10 --tries=1 --max-jobs=25
-directory=/var/www/dealer
+command=php /var/www/reseller/artisan queue:work sqs --queue=sales-recovery --sleep=10 --tries=1 --max-jobs=25
+directory=/var/www/reseller
 autostart=true
 autorestart=true
 user=www-data
 numprocs=1
 redirect_stderr=true
-stdout_logfile=/var/www/dealer/storage/logs/worker-recovery.log
+stdout_logfile=/var/www/reseller/storage/logs/worker-recovery.log
 
-[program:dealer-monitor]
-command=php /var/www/dealer/artisan sales:monitor-high-demand --interval=30 --daemon
-directory=/var/www/dealer
+[program:reseller-monitor]
+command=php /var/www/reseller/artisan sales:monitor-high-demand --interval=30 --daemon
+directory=/var/www/reseller
 autostart=true
 autorestart=true
 user=www-data
 redirect_stderr=true
-stdout_logfile=/var/www/dealer/storage/logs/monitor.log
+stdout_logfile=/var/www/reseller/storage/logs/monitor.log
 ```
 
 ### Cron Jobs Setup (Enterprise)
 ```bash
 # crontab -e
 # Laravel scheduler (every minute)
-* * * * * cd /var/www/dealer && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /var/www/reseller && php artisan schedule:run >> /dev/null 2>&1
 
 # Recovery automático de vendas órfãs (a cada 5 min)
-*/5 * * * * cd /var/www/dealer && php artisan sales:recover-pending >> /dev/null 2>&1
+*/5 * * * * cd /var/www/reseller && php artisan sales:recover-pending >> /dev/null 2>&1
 
 # Validação de integridade (a cada hora)
-0 * * * * cd /var/www/dealer && php artisan sales:validate-implementation --silent
+0 * * * * cd /var/www/reseller && php artisan sales:validate-implementation --silent
 
 # Health check e métricas (a cada minuto)
-* * * * * cd /var/www/dealer && php artisan sales:health-check --metrics
+* * * * * cd /var/www/reseller && php artisan sales:health-check --metrics
 
 # Limpeza de logs (diário)
-0 2 * * * cd /var/www/dealer && php artisan log:clear --days=30
+0 2 * * * cd /var/www/reseller && php artisan log:clear --days=30
 
 # Cache warming para produtos populares (a cada 30 min)
-*/30 * * * * cd /var/www/dealer && php artisan cache:warm-products
+*/30 * * * * cd /var/www/reseller && php artisan cache:warm-products
 
 # Backup de métricas críticas (a cada hora)
-0 * * * * cd /var/www/dealer && php artisan sales:backup-metrics
+0 * * * * cd /var/www/reseller && php artisan sales:backup-metrics
 ```
 
 ## � Monitoramento e Alertas (Enterprise)
@@ -608,17 +608,17 @@ stdout_logfile=/var/www/dealer/storage/logs/monitor.log
 #!/bin/bash
 # /usr/local/bin/send-sales-metrics.sh
 
-cd /var/www/dealer
+cd /var/www/reseller
 
 # Métricas de vendas
 SALES_PER_MINUTE=$(php artisan sales:get-metric --metric=sales_per_minute)
 QUEUE_DEPTH=$(php artisan queue:size --queue=sales-high-priority)
-ACTIVE_WORKERS=$(supervisorctl status dealer-workers:* | grep RUNNING | wc -l)
+ACTIVE_WORKERS=$(supervisorctl status reseller-workers:* | grep RUNNING | wc -l)
 CIRCUIT_BREAKERS=$(php artisan sales:get-metric --metric=circuit_breakers_open)
 
 # Enviar para CloudWatch
 aws cloudwatch put-metric-data \
-  --namespace "Dealer/Sales" \
+  --namespace "Reseller/Sales" \
   --metric-data MetricName=SalesPerMinute,Value=$SALES_PER_MINUTE,Unit=Count/Minute \
   --metric-data MetricName=QueueDepth,Value=$QUEUE_DEPTH,Unit=Count \
   --metric-data MetricName=ActiveWorkers,Value=$ACTIVE_WORKERS,Unit=Count \
@@ -653,7 +653,7 @@ Route::get('/health', function () {
         $checks['sales_system'] = $lastSale && $lastSale->created_at->diffInMinutes() < 60;
         
         // Workers check via supervisor
-        $workersRunning = exec("supervisorctl status dealer-workers:* | grep RUNNING | wc -l");
+        $workersRunning = exec("supervisorctl status reseller-workers:* | grep RUNNING | wc -l");
         $checks['workers'] = (int)$workersRunning >= 3;
         
     } catch (\Exception $e) {
@@ -684,10 +684,10 @@ Resources:
   HighQueueDepthAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: Dealer-HighQueueDepth
+      AlarmName: Reseller-HighQueueDepth
       AlarmDescription: "Sales queue depth too high - may indicate processing bottleneck"
       MetricName: QueueDepth
-      Namespace: Dealer/Sales
+      Namespace: Reseller/Sales
       Statistic: Average
       Period: 300
       EvaluationPeriods: 2
@@ -699,10 +699,10 @@ Resources:
   LowSalesVolumeAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: Dealer-LowSalesVolume
+      AlarmName: Reseller-LowSalesVolume
       AlarmDescription: "Unusually low sales volume - system may be down"
       MetricName: SalesPerMinute
-      Namespace: Dealer/Sales
+      Namespace: Reseller/Sales
       Statistic: Average
       Period: 900
       EvaluationPeriods: 3
@@ -712,10 +712,10 @@ Resources:
   WorkersDownAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: Dealer-WorkersDown
+      AlarmName: Reseller-WorkersDown
       AlarmDescription: "Queue workers not running - sales processing stopped"
       MetricName: ActiveWorkers
-      Namespace: Dealer/Sales
+      Namespace: Reseller/Sales
       Statistic: Average
       Period: 60
       EvaluationPeriods: 1
@@ -725,10 +725,10 @@ Resources:
   CircuitBreakersOpenAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: Dealer-CircuitBreakersOpen
+      AlarmName: Reseller-CircuitBreakersOpen
       AlarmDescription: "Circuit breakers protecting products - high contention detected"
       MetricName: CircuitBreakersOpen
-      Namespace: Dealer/Sales
+      Namespace: Reseller/Sales
       Statistic: Average
       Period: 300
       EvaluationPeriods: 1
@@ -739,11 +739,11 @@ Resources:
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name dealer.yourdomain.com;
+    server_name reseller.yourdomain.com;
     
     # SSL Configuration
-    ssl_certificate /etc/ssl/certs/dealer.pem;
-    ssl_certificate_key /etc/ssl/private/dealer.key;
+    ssl_certificate /etc/ssl/certs/reseller.pem;
+    ssl_certificate_key /etc/ssl/private/reseller.key;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384;
     ssl_prefer_server_ciphers off;
@@ -800,39 +800,39 @@ http {
 # AWS Security Groups for production
 # Application Load Balancer SG
 aws ec2 create-security-group \
-  --group-name dealer-alb-sg \
-  --description "Security group for Dealer ALB"
+  --group-name reseller-alb-sg \
+  --description "Security group for Reseller ALB"
 
 aws ec2 authorize-security-group-ingress \
-  --group-name dealer-alb-sg \
+  --group-name reseller-alb-sg \
   --protocol tcp \
   --port 443 \
   --cidr 0.0.0.0/0
 
 aws ec2 authorize-security-group-ingress \
-  --group-name dealer-alb-sg \
+  --group-name reseller-alb-sg \
   --protocol tcp \
   --port 80 \
   --cidr 0.0.0.0/0
 
 # EC2 Instances SG (only from ALB)
 aws ec2 create-security-group \
-  --group-name dealer-ec2-sg \
-  --description "Security group for Dealer EC2 instances"
+  --group-name reseller-ec2-sg \
+  --description "Security group for Reseller EC2 instances"
 
 aws ec2 authorize-security-group-ingress \
-  --group-name dealer-ec2-sg \
+  --group-name reseller-ec2-sg \
   --protocol tcp \
   --port 80 \
-  --source-group dealer-alb-sg
+  --source-group reseller-alb-sg
 
 # Database SG (only from EC2)
 aws ec2 create-security-group \
-  --group-name dealer-rds-sg \
-  --description "Security group for Dealer RDS"
+  --group-name reseller-rds-sg \
+  --description "Security group for Reseller RDS"
 
 aws ec2 authorize-security-group-ingress \
-  --group-name dealer-rds-sg \
+  --group-name reseller-rds-sg \
   --protocol tcp \
   --port 3306 \
 ## 📈 Performance Tuning (Alta Demanda)
@@ -891,7 +891,7 @@ php_value[max_input_time] = 300
 
 ; Redis session handling
 php_value[session.save_handler] = redis
-php_value[session.save_path] = "tcp://dealer-cache.xxxxx.cache.amazonaws.com:6379"
+php_value[session.save_path] = "tcp://reseller-cache.xxxxx.cache.amazonaws.com:6379"
 
 ; OPcache optimizations
 php_value[opcache.enable] = 1
@@ -937,7 +937,7 @@ php artisan log:clear --days=7
 php artisan cache:clear && php artisan cache:warm-products
 
 # Status dos workers
-supervisorctl status dealer-workers:*
+supervisorctl status reseller-workers:*
 
 # Métricas de performance
 php artisan sales:monitor-high-demand --summary
@@ -946,7 +946,7 @@ php artisan sales:monitor-high-demand --summary
 ### Comandos de Emergência
 ```bash
 # Parar todos os workers (emergência)
-supervisorctl stop dealer-workers:*
+supervisorctl stop reseller-workers:*
 
 # Reiniciar sistema completo
 sudo systemctl restart php8.2-fpm nginx supervisor
@@ -980,7 +980,7 @@ php artisan test:sales-concurrency --users=10 --quantity=1
 - [ ] Health check respondendo OK
 
 ### ✅ **Pós-Deploy**
-- [ ] Health check: `curl https://dealer.com/health`
+- [ ] Health check: `curl https://reseller.com/health`
 - [ ] Teste de venda: Create manual sale test
 - [ ] Workers processando: Check queue workers
 - [ ] Métricas normais: CloudWatch dashboards
@@ -994,7 +994,7 @@ php artisan test:sales-concurrency --users=10 --quantity=1
 **✅ Ambiente: Desenvolvimento → Produção AWS escalável**
     ssl_protocols TLSv1.2 TLSv1.3;
     
-    root /var/www/dealer/public;
+    root /var/www/reseller/public;
     index index.php;
     
     location / {
@@ -1046,7 +1046,7 @@ class SecurityHeaders {
 - [ ] Retirar do modo manutenção: `php artisan up`
 
 ### ✅ Pós-Deploy
-- [ ] Verificar health check: `curl https://dealer.yourdomain.com/health`
+- [ ] Verificar health check: `curl https://reseller.yourdomain.com/health`
 - [ ] Testar funcionalidades críticas (login, criação de venda)
 - [ ] Verificar workers funcionando: `supervisorctl status`
 - [ ] Monitorar logs por 15 minutos

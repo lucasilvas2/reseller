@@ -16,8 +16,18 @@ class Product extends Model
         'name',
         'brand_id',
         'description',
+        'category',
         'image_url',
-        'store_id'
+        'store_id',
+        'sku',
+        'barcode',
+        'cost_price',
+        'sale_price'
+    ];
+
+    protected $casts = [
+        'cost_price' => 'decimal:2',
+        'sale_price' => 'decimal:2',
     ];
 
     /**
@@ -29,35 +39,19 @@ class Product extends Model
     }
 
     /**
-     * Alias for brand relationship to maintain compatibility
+     * Get the order items for the product.
      */
-    public function brands(): BelongsTo
+    public function orderItems(): HasMany
     {
-        return $this->brand();
+        return $this->hasMany(OrderItem::class, 'product_id');
     }
 
     /**
-     * Get the product variants for the product.
+     * Get the stock movements for the product.
      */
-    public function variants(): HasMany
+    public function stockMovements(): HasMany
     {
-        return $this->hasMany(ProductVariant::class, 'product_id');
-    }
-
-    /**
-     * Alias for variants relationship (backward compatibility)
-     */
-    public function productSkus(): HasMany
-    {
-        return $this->variants();
-    }
-
-    /**
-     * Alias for variants relationship
-     */
-    public function skus(): HasMany
-    {
-        return $this->variants();
+        return $this->hasMany(StockMovement::class, 'product_id');
     }
 
     /**
@@ -66,5 +60,45 @@ class Product extends Model
     public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class);
+    }
+
+    // Business Logic Methods
+
+    /**
+     * Get current stock for this product
+     */
+    public function getCurrentStock(): int
+    {
+        return $this->stockMovements()
+            ->selectRaw('COALESCE(SUM(CASE WHEN type = "in" THEN quantity WHEN type = "out" THEN -quantity END), 0) as total')
+            ->value('total') ?? 0;
+    }
+
+    /**
+     * Check if product has available stock
+     */
+    public function hasStock(int $quantity = 1): bool
+    {
+        return $this->getCurrentStock() >= $quantity;
+    }
+
+    /**
+     * Calculate profit margin percentage
+     */
+    public function getProfitMargin(): float
+    {
+        if ($this->cost_price <= 0) {
+            return 0;
+        }
+
+        return (($this->sale_price - $this->cost_price) / $this->cost_price) * 100;
+    }
+
+    /**
+     * Check if product is active and available for sale
+     */
+    public function isActive(): bool
+    {
+        return !empty($this->sku) && $this->sale_price > 0;
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -11,13 +10,11 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    protected ProductVariant $productVariant;
     protected StockMovement $stockMovement;
     protected Product $product;
 
-    public function __construct(ProductVariant $productVariant, StockMovement $stockMovement, Product $product)
+    public function __construct(StockMovement $stockMovement, Product $product)
     {
-        $this->productVariant = $productVariant;
         $this->stockMovement = $stockMovement;
         $this->product = $product;
     }
@@ -51,7 +48,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Build dashboard for non-dealer users
+     * Build dashboard for non-reseller users
      */
     private function buildGuestDashboard(): Response
     {
@@ -129,14 +126,14 @@ class DashboardController extends Controller
     private function getRecentMovements(int $storeId): \Illuminate\Support\Collection
     {
         return $this->stockMovement->where('store_id', $storeId)
-            ->with(['productVariant.product', 'user'])
+            ->with(['product.brand', 'user'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
             ->map(function ($movement) {
                 return [
                     'id' => $movement->id,
-                    'product_name' => $movement->productVariant->product->name ?? 'N/A',
+                    'product_name' => $movement->product->name ?? 'N/A',
                     'type' => $movement->type,
                     'quantity' => $movement->quantity,
                     'created_at' => $movement->created_at,
@@ -173,23 +170,23 @@ class DashboardController extends Controller
      */
     private function getInventoryData(int $storeId): \Illuminate\Support\Collection
     {
-        return $this->productVariant->where('store_id', $storeId)
-            ->with(['product', 'stockMovements'])
+        return $this->product->where('store_id', $storeId)
+            ->with(['brand', 'stockMovements'])
             ->get()
-            ->map(function ($productVariant) {
-                $totalIn = $productVariant->stockMovements->where('type', 'in')->sum('quantity');
-                $totalOut = $productVariant->stockMovements->where('type', 'out')->sum('quantity');
+            ->map(function ($product) {
+                $totalIn = $product->stockMovements->where('type', 'in')->sum('quantity');
+                $totalOut = $product->stockMovements->where('type', 'out')->sum('quantity');
                 $currentStock = $totalIn - $totalOut;
 
                 return [
-                    'id' => $productVariant->id,
-                    'product_name' => $productVariant->product->name ?? 'N/A',
-                    'sku' => $productVariant->sku,
+                    'id' => $product->id,
+                    'product_name' => $product->name ?? 'N/A',
+                    'sku' => $product->sku,
                     'current_stock' => $currentStock,
-                    'cost_price' => $productVariant->cost_price,
-                    'sale_price' => $productVariant->sale_price,
-                    'stock_value' => $currentStock * $productVariant->cost_price,
-                    'category' => $productVariant->product->category ?? 'Uncategorized',
+                    'cost_price' => $product->cost_price,
+                    'sale_price' => $product->sale_price,
+                    'stock_value' => $currentStock * $product->cost_price,
+                    'category' => $product->category ?? 'Uncategorized',
                 ];
             });
     }

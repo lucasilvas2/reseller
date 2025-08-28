@@ -1,4 +1,4 @@
-# Documentação de Banco de Dados - Dealer Management System
+# Documentação de Banco de Dados - Reseller Management System
 
 ## 🗄️ Visão Geral do Banco
 
@@ -23,12 +23,12 @@ O sistema utiliza **MySQL 8.0** em produção e **SQLite** para desenvolvimento,
 │ ├─ users               │ ├─ stores                          │
 │ ├─ model_has_roles     │ ├─ brands                          │
 │ └─ model_has_permissions│ ├─ clients                        │
-│                        │ └─ products                        │
+│                        │ └─ products (CONSOLIDATED)         │
 ├─────────────────────────────────────────────────────────────┤
 │ INVENTORY MANAGEMENT   │ SALES PROCESSING                   │
-│ ├─ products_skus       │ ├─ sales                           │
-│ ├─ stock_movements     │ └─ order_items                     │
-│ └─ inventory_audit     │                                    │
+│ ├─ stock_movements     │ ├─ sales                           │
+│ └─ inventory_audit     │ ├─ order_items                     │
+│                        │ └─ sale_item_failures (NEW)       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -138,58 +138,49 @@ CREATE TABLE clients (
 
 ### 3. Gestão de Produtos
 
-#### `products` - Produtos
+#### `products` - Produtos (ESTRUTURA CONSOLIDADA)
 ```sql
 CREATE TABLE products (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     description TEXT NULL,
-    brand_id BIGINT UNSIGNED NULL,
     category VARCHAR(255) NULL,
+    
+    -- Campos consolidados (anteriormente em products_skus)
+    sku VARCHAR(255) NOT NULL UNIQUE,
+    barcode VARCHAR(255) NULL,
+    cost_price DECIMAL(10,2) NULL,
+    sale_price DECIMAL(10,2) NOT NULL,
+    weight DECIMAL(8,3) NULL,
+    dimensions JSON NULL,
+    
+    -- Relacionamentos
+    brand_id BIGINT UNSIGNED NULL,
+    store_id BIGINT UNSIGNED NOT NULL,
+    
+    -- Auditoria
     active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     deleted_at TIMESTAMP NULL,
     
+    -- Índices otimizados
     KEY products_brand_id_foreign (brand_id),
+    KEY products_store_id_foreign (store_id),
+    KEY products_sku_index (sku),
     KEY products_name_index (name),
     KEY products_category_index (category),
     KEY products_active_index (active),
     KEY products_deleted_at_index (deleted_at),
     
     CONSTRAINT products_brand_id_foreign 
-        FOREIGN KEY (brand_id) REFERENCES brands (id) ON DELETE SET NULL
+        FOREIGN KEY (brand_id) REFERENCES brands (id) ON DELETE SET NULL,
+    CONSTRAINT products_store_id_foreign 
+        FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-#### `products_skus` - SKUs de Produtos (Variações)
-```sql
-CREATE TABLE products_skus (
-    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    product_id BIGINT UNSIGNED NOT NULL,
-    sku_code VARCHAR(255) NOT NULL UNIQUE,
-    name VARCHAR(255) NOT NULL,
-    description TEXT NULL,
-    price DECIMAL(10,2) NOT NULL,
-    cost_price DECIMAL(10,2) NULL,
-    weight DECIMAL(8,3) NULL,
-    dimensions JSON NULL,        -- Altura, largura, profundidade
-    attributes JSON NULL,        -- Cor, tamanho, etc.
-    active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    deleted_at TIMESTAMP NULL,
-    
-    KEY products_skus_product_id_foreign (product_id),
-    KEY products_skus_sku_code_index (sku_code),
-    KEY products_skus_price_index (price),
-    KEY products_skus_active_index (active),
-    KEY products_skus_deleted_at_index (deleted_at),
-    
-    CONSTRAINT products_skus_product_id_foreign 
-        FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-```
+**🔄 NOTA DE REFATORAÇÃO:** A tabela `products_skus` foi eliminada e seus campos consolidados em `products`. Esta mudança simplifica drasticamente as queries e melhora a performance.
 
 ### 4. Controle de Estoque
 
@@ -197,7 +188,7 @@ CREATE TABLE products_skus (
 ```sql
 CREATE TABLE stock_movements (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    product_sku_id BIGINT UNSIGNED NOT NULL,
+    product_id BIGINT UNSIGNED NOT NULL, -- ATUALIZADO: product_sku_id → product_id
     store_id BIGINT UNSIGNED NOT NULL,
     type ENUM('in', 'out') NOT NULL,
     quantity INT NOT NULL,
@@ -497,7 +488,7 @@ SELECT
     (CARDINALITY / TABLE_ROWS) * 100 as selectivity
 FROM INFORMATION_SCHEMA.STATISTICS s
 JOIN INFORMATION_SCHEMA.TABLES t USING(TABLE_SCHEMA, TABLE_NAME)
-WHERE TABLE_SCHEMA = 'dealer'
+WHERE TABLE_SCHEMA = 'reseller'
 ORDER BY selectivity DESC;
 
 -- Slow query analysis

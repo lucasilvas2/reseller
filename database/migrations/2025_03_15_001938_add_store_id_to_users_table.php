@@ -22,8 +22,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['store_id']); // Remove a chave estrangeira
-            $table->dropColumn('store_id');    // Remove a coluna
+            $table->dropForeign(['store_id']);
+            $table->dropColumn('store_id');
         });
     }
 };

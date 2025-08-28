@@ -3,14 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Contracts\SaleProcessor;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Client;
-use App\Models\ProductVariant;
 use App\Models\OrderItem;
 use App\Models\StockMovement;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Artisan;
 
 class TestSalesConcurrency extends Command
 {
@@ -22,7 +21,6 @@ class TestSalesConcurrency extends Command
 
     protected $description = 'Testar concorrência no processamento de vendas';
 
-    // ✅ Propriedades para rastrear o teste atual
     private array $testSaleIds = [];
     private $testStartTime = null;
 
@@ -74,24 +72,23 @@ class TestSalesConcurrency extends Command
             }
 
             // Criar produto de teste com estoque inicial via StockMovement
-            $product = ProductVariant::firstOrCreate([
+            $product = Product::firstOrCreate([
                 'sku' => 'CONCURRENCY-TEST'
             ], [
-                'product_id' => 1,
                 'cost_price' => 10.00,
                 'sale_price' => 20.00,
                 'store_id' => 1,
             ]);
 
             // Criar movimento de entrada de estoque
-            $existingStock = StockMovement::where('product_sku_id', $product->id)
+            $existingStock = StockMovement::where('product_id', $product->id)
                 ->where('type', 'in')
                 ->where('description', 'LIKE', '%teste de concorrência%')
                 ->first();
 
             if (!$existingStock) {
                 StockMovement::create([
-                    'product_sku_id' => $product->id,
+                    'product_id' => $product->id,
                     'type' => 'in',
                     'quantity' => 1000,
                     'user_id' => 1,
@@ -111,23 +108,22 @@ class TestSalesConcurrency extends Command
 
         if ($productId) {
             // Buscar por ID ou SKU
-            return ProductVariant::where('id', $productId)
+            return Product::where('id', $productId)
                 ->orWhere('sku', $productId)
                 ->first();
         }
 
         // Produto padrão de teste
-        return ProductVariant::where('sku', 'CONCURRENCY-TEST')->first();
+        return Product::where('sku', 'CONCURRENCY-TEST')->first();
     }
 
-    private function runConcurrencyTest(ProductsSku $product, int $users, int $quantity): void
+    private function runConcurrencyTest(Product $product, int $users, int $quantity): void
     {
         $this->info("⚡ Executando {$users} vendas simultâneas...");
 
         $client = Client::first();
         $saleIds = [];
 
-        // ✅ Marcar timestamp de início do teste
         $testStartTime = now();
 
         // Criar vendas simultâneas
@@ -144,7 +140,7 @@ class TestSalesConcurrency extends Command
             // Criar OrderItem
             OrderItem::create([
                 'sale_id' => $sale->id,
-                'product_sku_id' => $product->id,
+                'product_id' => $product->id,
                 'quantity' => $quantity,
                 'unit_price' => $product->sale_price,
                 'total_price' => $product->sale_price * $quantity,
@@ -195,30 +191,27 @@ class TestSalesConcurrency extends Command
             }
         }
 
-        // ✅ Armazenar dados do teste para validação
         $this->testSaleIds = $saleIds;
         $this->testStartTime = $testStartTime;
     }
 
-    private function validateResults(ProductsSku $product, int $initialStock, int $users, int $quantity): void
+    private function validateResults(Product $product, int $initialStock, int $users, int $quantity): void
     {
         $this->info('🔍 Validando integridade...');
 
         $product->refresh();
         $finalStock = $product->getCurrentStock();
 
-        // ✅ Contar apenas vendas DESTE teste (pelos IDs específicos)
         $testCompletedSales = Sale::whereIn('id', $this->testSaleIds)
             ->where('status', 'completed')
             ->count();
 
-        // ✅ Calcular unidades vendidas NESTE teste
         $testSoldUnits = Sale::whereIn('id', $this->testSaleIds)
             ->where('status', 'completed')
             ->with('orderItems')
             ->get()
             ->sum(function($sale) use ($product) {
-                return $sale->orderItems->where('product_sku_id', $product->id)->sum('quantity');
+                return $sale->orderItems->where('product_id', $product->id)->sum('quantity');
             });
 
         $expectedStock = $initialStock - $testSoldUnits;

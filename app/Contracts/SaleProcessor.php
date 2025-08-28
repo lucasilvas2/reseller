@@ -2,7 +2,6 @@
 
 namespace App\Contracts;
 
-use App\Enums\SaleEnum;
 use App\Models\Sale;
 
 interface SaleProcessor

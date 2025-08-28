@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('client_id')->constrained('clients');
             $table->foreignId('store_id')->constrained('stores');
-            $table->enum('status', ['pending', 'paid', 'canceled']);
+            $table->enum('status', ['pending', 'processing', 'completed', 'failed', 'canceled']);
             $table->decimal('total_amount', 10, 2);
             $table->timestamps();
             $table->softDeletes();

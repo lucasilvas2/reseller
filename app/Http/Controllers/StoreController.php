@@ -19,7 +19,6 @@ class StoreController extends Controller
     {
         $query = $this->storeModel->newQuery();
 
-        // Apply search filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -29,17 +28,14 @@ class StoreController extends Controller
             });
         }
 
-        // Apply name filter
         if ($request->filled('name')) {
             $query->where('name', 'like', "%" . $request->name . "%");
         }
 
-        // Apply email filter
         if ($request->filled('email')) {
             $query->where('email', 'like', "%" . $request->email . "%");
         }
 
-        // Apply date filters
         if ($request->filled('date_from')) {
             $query->where('created_at', '>=', $request->date_from);
         }
@@ -47,7 +43,6 @@ class StoreController extends Controller
             $query->where('created_at', '<=', $request->date_to);
         }
 
-        // Apply sorting
         $sortKey = $request->get('sort', 'created_at');
         $sortOrder = $request->get('order', 'desc');
 

@@ -43,12 +43,12 @@ function onFileChange(event: Event) {
 </script>
 
 <template>
-    <div>
+    <div class="dark:bg-gray-700">
         <input
             ref="input"
             type="file"
             accept="image/*"
-            class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+            class="border-gray-300 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm com"
             @change="onFileChange"
         >
         <div v-if="previewUrl" class="mt-2">

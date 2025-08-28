@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\ProductVariant;
+use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -35,7 +35,7 @@ class StoreSaleRequest extends FormRequest
                 'exists:clients,id',
                 Rule::exists('clients', 'id')->where(function ($query) use ($storeId) {
                     $query->where('store_id', $storeId)
-                          ->whereNull('deleted_at');
+                        ->whereNull('deleted_at');
                 }),
             ],
 
@@ -48,15 +48,14 @@ class StoreSaleRequest extends FormRequest
             ],
 
             // Validação de cada item
-            'items.*.product_variant_id' => [
+            'items.*.product_id' => [
                 'required',
                 'integer',
-                'exists:product_variants,id',
-                Rule::exists('product_variants', 'id')->where(function ($query) use ($storeId) {
+                'exists:products,id',
+                Rule::exists('products', 'id')->where(function ($query) use ($storeId) {
                     $query->where('store_id', $storeId);
                 }),
             ],
-
             'items.*.quantity' => [
                 'required',
                 'integer',
@@ -103,9 +102,9 @@ class StoreSaleRequest extends FormRequest
             'items.min' => 'A venda deve ter pelo menos um produto.',
             'items.max' => 'Uma venda pode ter no máximo 50 produtos.',
 
-            // Mensagens para product_variant_id
-            'items.*.product_variant_id.required' => 'Selecione um produto válido.',
-            'items.*.product_variant_id.exists' => 'Um dos produtos selecionados não existe ou não pertence à sua loja.',
+            // Mensagens para product_id
+            'items.*.product_id.required' => 'Selecione um produto válido.',
+            'items.*.product_id.exists' => 'Um dos produtos selecionados não existe ou não pertence à sua loja.',
 
             // Mensagens para quantity
             'items.*.quantity.required' => 'Informe a quantidade do produto.',
@@ -138,7 +137,7 @@ class StoreSaleRequest extends FormRequest
         return [
             'client_id' => 'cliente',
             'items' => 'produtos',
-            'items.*.product_variant_id' => 'produto',
+            'items.*.product_id' => 'produto',
             'items.*.quantity' => 'quantidade',
             'items.*.unit_price' => 'preço unitário',
             'notes' => 'observações',
@@ -149,7 +148,7 @@ class StoreSaleRequest extends FormRequest
     /**
      * Configure the validator instance.
      *
-     * @param  \Illuminate\Validation\Validator  $validator
+     * @param \Illuminate\Validation\Validator $validator
      * @return void
      */
     public function withValidator($validator)
@@ -171,18 +170,18 @@ class StoreSaleRequest extends FormRequest
         }
 
         foreach ($this->input('items', []) as $index => $item) {
-            if (!isset($item['product_variant_id']) || !isset($item['quantity'])) {
+            if (!isset($item['product_id']) || !isset($item['quantity'])) {
                 continue;
             }
 
-            $productVariant = ProductVariant::find($item['product_variant_id']);
+            $product = Product::find($item['product_id']);
 
-            if (!$productVariant) {
+            if (!$product) {
                 continue;
             }
 
-            $currentStock = $productVariant->getCurrentStock();
-            $requestedQuantity = (int) $item['quantity'];
+            $currentStock = $product->getCurrentStock();
+            $requestedQuantity = (int)$item['quantity'];
 
             if ($currentStock < $requestedQuantity) {
                 $productName = $productSku->product->name ?? 'Produto desconhecido';
@@ -204,7 +203,7 @@ class StoreSaleRequest extends FormRequest
         }
 
         $skuIds = collect($this->input('items', []))
-            ->pluck('product_variant_id')
+            ->pluck('product_id')
             ->filter()
             ->toArray();
 
